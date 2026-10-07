@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function profile() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function hasRole(role) { return signedIn() && profile().role == role; }
+    function isAdmin() { return hasRole('ADMIN'); }
+    function isCoordinator() { return hasRole('COORDINATOR'); }
+
+    match /users/{userId} {
+      allow create: if signedIn() && request.auth.uid == userId && request.resource.data.role == 'STUDENT';
+      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow update: if isAdmin() || (signedIn() && request.auth.uid == userId
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'department', 'phone']));
+      allow delete: if isAdmin();
+    }
+
+    match /events/{eventId} {
+      allow read: if signedIn() && (isAdmin() || resource.data.status == 'approved'
+        || (isCoordinator() && resource.data.coordinatorId == request.auth.uid));
+      allow create: if isCoordinator() && request.resource.data.coordinatorId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.clubId == profile().clubId;
+      allow update: if isAdmin() || (isCoordinator()
+        && resource.data.coordinatorId == request.auth.uid
+        && request.resource.data.coordinatorId == resource.data.coordinatorId
+        && (request.resource.data.status == resource.data.status || request.resource.data.status == 'pending')
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'eventName', 'description', 'date', 'startTime', 'endTime', 'venue', 'category',
+          'department', 'budget', 'maxParticipants', 'registrationDeadline', 'clubName', 'clubId',
+          'status', 'rejectionReason'
+        ]));
+      allow delete: if isAdmin() || (isCoordinator() && resource.data.coordinatorId == request.auth.uid);
+    }
+
+    match /registrations/{registrationId} {
+      allow create: if signedIn() && request.resource.data.studentId == request.auth.uid
+        && get(/databases/$(database)/documents/events/$(request.resource.data.eventId)).data.status == 'approved';
+      allow read: if signedIn() && (isAdmin() || resource.data.studentId == request.auth.uid
+        || (isCoordinator() && resource.data.coordinatorId == request.auth.uid));
+      allow update: if isAdmin() || (isCoordinator() && resource.data.coordinatorId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']));
+      allow delete: if isAdmin() || (signedIn() && resource.data.studentId == request.auth.uid);
+    }
+
+    match /clubs/{clubId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+    match /notifications/{notificationId} {
+      allow read: if signedIn();
+      allow create: if isAdmin() || (isCoordinator()
+        && request.resource.data.coordinatorId == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+    match /winners/{winnerId} {
+      allow read: if signedIn();
+      allow write: if isAdmin() || isCoordinator();
+    }
+  }
+}

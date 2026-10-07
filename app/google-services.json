@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "86550059113",
+    "project_id": "eventhiveai-72dde",
+    "storage_bucket": "eventhiveai-72dde.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:86550059113:android:325c2ab4b5628866016af8",
+        "android_client_info": {
+          "package_name": "com.example.eventhiveai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZDQd5cMVB6FpJeNyxP49i6WH_qLATZ3k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
