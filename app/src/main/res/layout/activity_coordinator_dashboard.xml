@@ -559,6 +559,34 @@
                     android:textColor="#CBD5E1"
                     android:textSize="14sp" />
 
+                <LinearLayout
+                    android:id="@+id/menuCoordMembers"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp">
+
+                    <TextView
+                        android:layout_width="32dp"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="👥"
+                        android:textSize="20sp" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:text="Club Members"
+                        android:textColor="#E5E7EB"
+                        android:textSize="14sp" />
+
+                </LinearLayout>
                 <!-- 5. Upload Winners -->
                 <TextView
                     android:id="@+id/menuCoordWinners"

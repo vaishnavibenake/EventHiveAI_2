@@ -127,6 +127,10 @@
             android:name=".student.MyRegistrationsActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".coordinator.ClubMembersActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>
