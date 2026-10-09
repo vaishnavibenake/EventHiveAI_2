@@ -9,6 +9,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -55,14 +56,82 @@ public class MyEventsActivity extends AppCompatActivity {
         btnEmptyCreate = findViewById(R.id.btnEmptyCreate);
 
         recyclerMyEvents.setLayoutManager(new LinearLayoutManager(this));
+
         eventList = new ArrayList<>();
-        // In My Events, clicking opens EventDetailsActivity with Edit option
-        eventAdapter = new EventAdapter(eventList, "COORDINATOR", false, this::loadMyEvents);
+
+        // Keep existing event cards and completion actions.
+        eventAdapter = new EventAdapter(
+                eventList,
+                "COORDINATOR",
+                false,
+                this::loadMyEvents
+        );
         recyclerMyEvents.setAdapter(eventAdapter);
 
         btnBack.setOnClickListener(v -> finish());
-        btnNewEvent.setOnClickListener(v -> startActivity(new Intent(MyEventsActivity.this, CreateEventActivity.class)));
-        btnEmptyCreate.setOnClickListener(v -> startActivity(new Intent(MyEventsActivity.this, CreateEventActivity.class)));
+
+        btnNewEvent.setOnClickListener(v ->
+                startActivity(new Intent(
+                        MyEventsActivity.this,
+                        CreateEventActivity.class
+                ))
+        );
+
+        btnEmptyCreate.setOnClickListener(v ->
+                startActivity(new Intent(
+                        MyEventsActivity.this,
+                        CreateEventActivity.class
+                ))
+        );
+
+        // Open the winner-upload flow from a selected completed event.
+        recyclerMyEvents.addOnChildAttachStateChangeListener(
+                new RecyclerView.OnChildAttachStateChangeListener() {
+                    @Override
+                    public void onChildViewAttachedToWindow(View view) {
+                        view.setOnLongClickListener(v -> {
+                            int position = recyclerMyEvents.getChildAdapterPosition(v);
+
+                            if (position == RecyclerView.NO_POSITION) {
+                                return true;
+                            }
+
+                            EventModel event = eventList.get(position);
+
+                            if (!"completed".equalsIgnoreCase(event.getStatus())) {
+                                Toast.makeText(
+                                        MyEventsActivity.this,
+                                        "Only completed events can have winners published.",
+                                        Toast.LENGTH_SHORT
+                                ).show();
+                                return true;
+                            }
+
+                            new AlertDialog.Builder(MyEventsActivity.this)
+                                    .setTitle(event.getEventName())
+                                    .setMessage("Upload winners for this completed event?")
+                                    .setNegativeButton("Cancel", null)
+                                    .setPositiveButton("Upload Winners", (dialog, which) -> {
+                                        Intent intent = new Intent(
+                                                MyEventsActivity.this,
+                                                UploadWinnersActivity.class
+                                        );
+                                        intent.putExtra("EVENT_ID", event.getEventId());
+                                        intent.putExtra("EVENT_NAME", event.getEventName());
+                                        startActivity(intent);
+                                    })
+                                    .show();
+
+                            return true;
+                        });
+                    }
+
+                    @Override
+                    public void onChildViewDetachedFromWindow(View view) {
+                        view.setOnLongClickListener(null);
+                    }
+                }
+        );
 
         loadMyEvents();
     }
@@ -75,48 +144,77 @@ public class MyEventsActivity extends AppCompatActivity {
 
     private void loadMyEvents() {
         FirebaseUser user = auth.getCurrentUser();
-        if (user == null) return;
+
+        if (user == null) {
+            Toast.makeText(this, "Please log in again.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         progressBar.setVisibility(View.VISIBLE);
         emptyView.setVisibility(View.GONE);
 
-        db.collection("events").whereEqualTo("coordinatorId", user.getUid()).get()
+        db.collection("events")
+                .whereEqualTo("coordinatorId", user.getUid())
+                .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     progressBar.setVisibility(View.GONE);
                     eventList.clear();
 
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        String coord = doc.getString("coordinatorId");
-                        String club = doc.getString("clubId");
+                        String coordinatorId = doc.getString("coordinatorId");
 
-                        boolean matches = user.getUid().equals(coord);
-                        if (matches) {
+                        if (user.getUid().equals(coordinatorId)) {
                             EventModel event = doc.toObject(EventModel.class);
-                            if (event == null) event = new EventModel();
+
+                            if (event == null) {
+                                event = new EventModel();
+                            }
+
                             event.setEventId(doc.getId());
-                            if (doc.contains("eventName")) event.setEventName(doc.getString("eventName"));
-                            if (doc.contains("clubName")) event.setClubName(doc.getString("clubName"));
-                            if (doc.contains("date")) event.setDate(doc.getString("date"));
-                            if (doc.contains("venue")) event.setVenue(doc.getString("venue"));
-                            if (doc.contains("status")) event.setStatus(doc.getString("status"));
-                            if (doc.contains("category")) event.setCategory(doc.getString("category"));
+
+                            if (doc.contains("eventName")) {
+                                event.setEventName(doc.getString("eventName"));
+                            }
+                            if (doc.contains("clubName")) {
+                                event.setClubName(doc.getString("clubName"));
+                            }
+                            if (doc.contains("date")) {
+                                event.setDate(doc.getString("date"));
+                            }
+                            if (doc.contains("venue")) {
+                                event.setVenue(doc.getString("venue"));
+                            }
+                            if (doc.contains("status")) {
+                                event.setStatus(doc.getString("status"));
+                            }
+                            if (doc.contains("category")) {
+                                event.setCategory(doc.getString("category"));
+                            }
 
                             eventList.add(event);
                         }
                     }
 
-                    Collections.sort(eventList, Comparator.comparing(EventModel::getDate));
+                    Collections.sort(
+                            eventList,
+                            Comparator.comparing(EventModel::getDate)
+                    );
+
                     eventAdapter.notifyDataSetChanged();
 
-                    if (eventList.isEmpty()) {
-                        emptyView.setVisibility(View.VISIBLE);
-                    } else {
-                        emptyView.setVisibility(View.GONE);
-                    }
+                    emptyView.setVisibility(
+                            eventList.isEmpty() ? View.VISIBLE : View.GONE
+                    );
                 })
                 .addOnFailureListener(e -> {
                     progressBar.setVisibility(View.GONE);
-                    Toast.makeText(MyEventsActivity.this, "Failed to load events: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+
+                    Toast.makeText(
+                            MyEventsActivity.this,
+                            "Failed to load events: " + e.getMessage(),
+                            Toast.LENGTH_SHORT
+                    ).show();
                 });
     }
 }
+

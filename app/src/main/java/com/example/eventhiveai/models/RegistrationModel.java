@@ -2,6 +2,7 @@ package com.example.eventhiveai.models;
 
 import com.google.firebase.firestore.ServerTimestamp;
 import java.util.Date;
+import java.util.List;
 
 public class RegistrationModel {
     private String registrationId;
@@ -9,10 +10,20 @@ public class RegistrationModel {
     private String eventName;
     private String eventDate;
     private String eventVenue;
-    private String studentId;
+    private String studentId;       // leader or individual student
     private String studentName;
     private String studentEmail;
-    private String status; // "registered", "cancelled", "attended"
+    private String status;          // "registered", "cancelled", "attended"
+    private String coordinatorId;
+
+    // Team / participation fields
+    private String participationType; // "Individual", "Pair", "Team"
+    private String teamId;
+    private String teamName;
+    private List<String> memberIds;
+    private List<String> memberNames;
+    private int memberCount;
+    private String department;
 
     @ServerTimestamp
     private Date registeredAt;
@@ -35,83 +46,58 @@ public class RegistrationModel {
         this.status = status;
     }
 
-    public String getRegistrationId() {
-        return registrationId != null ? registrationId : "";
-    }
+    public String getRegistrationId() { return registrationId != null ? registrationId : ""; }
+    public void setRegistrationId(String registrationId) { this.registrationId = registrationId; }
 
-    public void setRegistrationId(String registrationId) {
-        this.registrationId = registrationId;
-    }
+    public String getEventId() { return eventId != null ? eventId : ""; }
+    public void setEventId(String eventId) { this.eventId = eventId; }
 
-    public String getEventId() {
-        return eventId != null ? eventId : "";
-    }
+    public String getEventName() { return eventName != null ? eventName : ""; }
+    public void setEventName(String eventName) { this.eventName = eventName; }
 
-    public void setEventId(String eventId) {
-        this.eventId = eventId;
-    }
+    public String getEventDate() { return eventDate != null ? eventDate : ""; }
+    public void setEventDate(String eventDate) { this.eventDate = eventDate; }
 
-    public String getEventName() {
-        return eventName != null ? eventName : "";
-    }
+    public String getEventVenue() { return eventVenue != null ? eventVenue : ""; }
+    public void setEventVenue(String eventVenue) { this.eventVenue = eventVenue; }
 
-    public void setEventName(String eventName) {
-        this.eventName = eventName;
-    }
+    public String getStudentId() { return studentId != null ? studentId : ""; }
+    public void setStudentId(String studentId) { this.studentId = studentId; }
 
-    public String getEventDate() {
-        return eventDate != null ? eventDate : "";
-    }
+    public String getStudentName() { return studentName != null ? studentName : ""; }
+    public void setStudentName(String studentName) { this.studentName = studentName; }
 
-    public void setEventDate(String eventDate) {
-        this.eventDate = eventDate;
-    }
+    public String getStudentEmail() { return studentEmail != null ? studentEmail : ""; }
+    public void setStudentEmail(String studentEmail) { this.studentEmail = studentEmail; }
 
-    public String getEventVenue() {
-        return eventVenue != null ? eventVenue : "";
-    }
+    public String getStatus() { return status != null ? status : "registered"; }
+    public void setStatus(String status) { this.status = status; }
 
-    public void setEventVenue(String eventVenue) {
-        this.eventVenue = eventVenue;
-    }
+    public String getCoordinatorId() { return coordinatorId != null ? coordinatorId : ""; }
+    public void setCoordinatorId(String coordinatorId) { this.coordinatorId = coordinatorId; }
 
-    public String getStudentId() {
-        return studentId != null ? studentId : "";
-    }
+    public Date getRegisteredAt() { return registeredAt; }
+    public void setRegisteredAt(Date registeredAt) { this.registeredAt = registeredAt; }
 
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
-    }
+    // Team fields
+    public String getParticipationType() { return participationType != null ? participationType : "Individual"; }
+    public void setParticipationType(String participationType) { this.participationType = participationType; }
 
-    public String getStudentName() {
-        return studentName != null ? studentName : "";
-    }
+    public String getTeamId() { return teamId != null ? teamId : ""; }
+    public void setTeamId(String teamId) { this.teamId = teamId; }
 
-    public void setStudentName(String studentName) {
-        this.studentName = studentName;
-    }
+    public String getTeamName() { return teamName != null ? teamName : ""; }
+    public void setTeamName(String teamName) { this.teamName = teamName; }
 
-    public String getStudentEmail() {
-        return studentEmail != null ? studentEmail : "";
-    }
+    public List<String> getMemberIds() { return memberIds; }
+    public void setMemberIds(List<String> memberIds) { this.memberIds = memberIds; }
 
-    public void setStudentEmail(String studentEmail) {
-        this.studentEmail = studentEmail;
-    }
+    public List<String> getMemberNames() { return memberNames; }
+    public void setMemberNames(List<String> memberNames) { this.memberNames = memberNames; }
 
-    public String getStatus() {
-        return status != null ? status : "registered";
-    }
+    public int getMemberCount() { return memberCount; }
+    public void setMemberCount(int memberCount) { this.memberCount = memberCount; }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public Date getRegisteredAt() {
-        return registeredAt;
-    }
-
-    public void setRegisteredAt(Date registeredAt) {
-        this.registeredAt = registeredAt;
-    }
+    public String getDepartment() { return department != null ? department : ""; }
+    public void setDepartment(String department) { this.department = department; }
 }

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -13,7 +14,7 @@
     android:clickable="true"
     android:focusable="true">
 
-    <!-- HEADER: EVENT NAME & STATUS BADGE -->
+    <!-- HEADER: EVENT NAME & STATUS -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -100,7 +101,7 @@
 
     </LinearLayout>
 
-    <!-- ACTION BUTTONS -->
+    <!-- ADMIN ACTION BUTTONS -->
     <LinearLayout
         android:id="@+id/layoutActionButtons"
         android:layout_width="match_parent"
@@ -134,5 +135,19 @@
             android:textStyle="bold" />
 
     </LinearLayout>
+
+    <!-- COORDINATOR ACTION -->
+    <Button
+        android:id="@+id/btnMarkCompleted"
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:layout_marginTop="10dp"
+        android:backgroundTint="#7C3AED"
+        android:text="✓ Mark Event as Completed"
+        android:textAllCaps="false"
+        android:textColor="#FFFFFF"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
 
 </LinearLayout>

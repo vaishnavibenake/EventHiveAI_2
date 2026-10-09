@@ -27,14 +27,17 @@
             app:tint="#F8FAFC" />
 
         <TextView
+            android:id="@+id/tvEventName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:text="Event Gallery"
+            android:text="Event Name"
             android:textColor="#F8FAFC"
             android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end" />
 
     </LinearLayout>
 
@@ -50,10 +53,11 @@
             android:orientation="vertical"
             android:padding="20dp">
 
+            <!-- PHOTOS SECTION -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="📸 Completed Events"
+                android:text="📸 Event Photos"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -62,35 +66,65 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp"
-                android:text="View your completed club events, photos and winners."
+                android:text="Photos from this completed event will appear here."
                 android:textColor="#94A3B8"
                 android:textSize="13sp" />
 
-            <ProgressBar
-                android:id="@+id/progressBarEvents"
+            <LinearLayout
+                android:id="@+id/photosContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#171A27"
+                    android:padding="20dp"
+                    android:gravity="center"
+                    android:text="No event photos added yet."
+                    android:textColor="#64748B"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+            <!-- WINNERS SECTION -->
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="20dp"
-                android:visibility="gone" />
+                android:layout_marginTop="28dp"
+                android:text="🏆 Winners"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/tvEmptyEvents"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="30dp"
-                android:gravity="center"
-                android:text="No completed events yet."
-                android:textColor="#64748B"
-                android:textSize="14sp"
-                android:visibility="gone" />
+                android:layout_marginTop="5dp"
+                android:text="Winners of this event will appear here."
+                android:textColor="#94A3B8"
+                android:textSize="13sp" />
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerEvents"
+            <LinearLayout
+                android:id="@+id/winnersContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:nestedScrollingEnabled="false" />
+                android:layout_marginTop="16dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#171A27"
+                    android:padding="20dp"
+                    android:gravity="center"
+                    android:text="No winners added yet."
+                    android:textColor="#64748B"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
 
         </LinearLayout>
 

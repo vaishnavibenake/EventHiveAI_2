@@ -247,6 +247,17 @@
                 android:textColor="#CBD5E1"
                 android:textSize="13sp" />
 
+            <TextView
+                android:id="@+id/tvParticipationType"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="👤 Participation: Individual"
+                android:textColor="#A78BFA"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
         </LinearLayout>
 
         <!-- DESCRIPTION CARD -->

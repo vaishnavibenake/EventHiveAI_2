@@ -109,7 +109,9 @@
         <activity
             android:name=".coordinator.EventGalleryActivity"
             android:exported="false" />
-
+        <activity
+            android:name=".coordinator.EventGalleryDetailsActivity"
+            android:exported="false" />
         <activity
             android:name=".coordinator.ClubProfileActivity"
             android:exported="false" />
@@ -125,6 +127,15 @@
 
         <activity
             android:name=".student.MyRegistrationsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".student.TeamRegistrationActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".student.MyParticipationActivity"
             android:exported="false" />
 
         <activity

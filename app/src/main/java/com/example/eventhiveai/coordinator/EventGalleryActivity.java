@@ -15,7 +15,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.eventhiveai.R;
-import com.example.eventhiveai.models.WinnerModel;
+import com.example.eventhiveai.admin.EventModel;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -25,12 +27,14 @@ import java.util.ArrayList;
 public class EventGalleryActivity extends AppCompatActivity {
 
     private ImageButton btnBack;
-    private RecyclerView recyclerWinners;
-    private ProgressBar progressBarWinners;
-    private TextView tvEmptyWinners;
+    private RecyclerView recyclerEvents;
+    private ProgressBar progressBarEvents;
+    private TextView tvEmptyEvents;
 
-    private ArrayList<WinnerModel> winnerList;
-    private WinnerAdapter adapter;
+    private ArrayList<EventModel> eventList;
+    private EventAdapter adapter;
+
+    private FirebaseAuth auth;
     private FirebaseFirestore db;
 
     @Override
@@ -38,101 +42,158 @@ public class EventGalleryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event_gallery);
 
+        auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
         btnBack = findViewById(R.id.btnBack);
-        recyclerWinners = findViewById(R.id.recyclerWinners);
-        progressBarWinners = findViewById(R.id.progressBarWinners);
-        tvEmptyWinners = findViewById(R.id.tvEmptyWinners);
+        recyclerEvents = findViewById(R.id.recyclerEvents);
+        progressBarEvents = findViewById(R.id.progressBarEvents);
+        tvEmptyEvents = findViewById(R.id.tvEmptyEvents);
 
-        recyclerWinners.setLayoutManager(new LinearLayoutManager(this));
-        winnerList = new ArrayList<>();
-        adapter = new WinnerAdapter(winnerList);
-        recyclerWinners.setAdapter(adapter);
+        recyclerEvents.setLayoutManager(new LinearLayoutManager(this));
+
+        eventList = new ArrayList<>();
+        adapter = new EventAdapter(eventList);
+        recyclerEvents.setAdapter(adapter);
 
         btnBack.setOnClickListener(v -> finish());
 
-        loadWinners();
+        loadCompletedEvents();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        loadWinners();
+        loadCompletedEvents();
     }
 
-    private void loadWinners() {
-        progressBarWinners.setVisibility(View.VISIBLE);
-        tvEmptyWinners.setVisibility(View.GONE);
+    private void loadCompletedEvents() {
 
-        db.collection("winners")
+        FirebaseUser user = auth.getCurrentUser();
+
+        if (user == null) {
+            Toast.makeText(
+                    this,
+                    "Please login again.",
+                    Toast.LENGTH_SHORT
+            ).show();
+            return;
+        }
+
+        progressBarEvents.setVisibility(View.VISIBLE);
+        tvEmptyEvents.setVisibility(View.GONE);
+
+        db.collection("events")
+                .whereEqualTo("coordinatorId", user.getUid())
+                .whereEqualTo("status", "completed")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    progressBarWinners.setVisibility(View.GONE);
-                    winnerList.clear();
+
+                    progressBarEvents.setVisibility(View.GONE);
+
+                    eventList.clear();
 
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        WinnerModel winner = doc.toObject(WinnerModel.class);
-                        if (winner == null) winner = new WinnerModel();
-                        winner.setWinnerId(doc.getId());
-                        if (doc.contains("eventName")) winner.setEventName(doc.getString("eventName"));
-                        if (doc.contains("clubName")) winner.setClubName(doc.getString("clubName"));
-                        if (doc.contains("firstPlace")) winner.setFirstPlace(doc.getString("firstPlace"));
-                        if (doc.contains("secondPlace")) winner.setSecondPlace(doc.getString("secondPlace"));
-                        if (doc.contains("thirdPlace")) winner.setThirdPlace(doc.getString("thirdPlace"));
 
-                        winnerList.add(winner);
+                        EventModel event = doc.toObject(EventModel.class);
+
+                        if (event == null) {
+                            event = new EventModel();
+                        }
+
+                        event.setEventId(doc.getId());
+
+                        eventList.add(event);
                     }
 
                     adapter.notifyDataSetChanged();
 
-                    if (winnerList.isEmpty()) {
-                        tvEmptyWinners.setVisibility(View.VISIBLE);
+                    if (eventList.isEmpty()) {
+                        tvEmptyEvents.setVisibility(View.VISIBLE);
                     } else {
-                        tvEmptyWinners.setVisibility(View.GONE);
+                        tvEmptyEvents.setVisibility(View.GONE);
                     }
                 })
                 .addOnFailureListener(e -> {
-                    progressBarWinners.setVisibility(View.GONE);
-                    Toast.makeText(EventGalleryActivity.this, "Failed to load winners: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+
+                    progressBarEvents.setVisibility(View.GONE);
+
+                    Toast.makeText(
+                            EventGalleryActivity.this,
+                            "Failed to load completed events: "
+                                    + e.getMessage(),
+                            Toast.LENGTH_LONG
+                    ).show();
                 });
     }
 
-    private static class WinnerAdapter extends RecyclerView.Adapter<WinnerAdapter.ViewHolder> {
-        private final ArrayList<WinnerModel> items;
+    private static class EventAdapter
+            extends RecyclerView.Adapter<EventAdapter.ViewHolder> {
 
-        WinnerAdapter(ArrayList<WinnerModel> items) {
+        private final ArrayList<EventModel> items;
+
+        EventAdapter(ArrayList<EventModel> items) {
             this.items = items;
         }
 
         @NonNull
         @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.winner_item, parent, false);
-            return new ViewHolder(v);
+        public ViewHolder onCreateViewHolder(
+                @NonNull ViewGroup parent,
+                int viewType) {
+
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(
+                            R.layout.event_gallery_item,
+                            parent,
+                            false
+                    );
+
+            return new ViewHolder(view);
         }
 
         @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            WinnerModel item = items.get(position);
-            holder.tvWinnerEventName.setText(item.getEventName());
-            holder.tvWinnerClub.setText(item.getClubName().isEmpty() ? "Campus Club" : item.getClubName());
+        public void onBindViewHolder(
+                @NonNull ViewHolder holder,
+                int position) {
 
-            holder.tvWinnerFirst.setText(item.getFirstPlace().isEmpty() ? "🥇 1st: TBA" : item.getFirstPlace());
+            EventModel event = items.get(position);
 
-            if (!item.getSecondPlace().isEmpty()) {
-                holder.tvWinnerSecond.setVisibility(View.VISIBLE);
-                holder.tvWinnerSecond.setText(item.getSecondPlace());
-            } else {
-                holder.tvWinnerSecond.setVisibility(View.GONE);
-            }
+            holder.tvEventName.setText(event.getEventName());
 
-            if (!item.getThirdPlace().isEmpty()) {
-                holder.tvWinnerThird.setVisibility(View.VISIBLE);
-                holder.tvWinnerThird.setText(item.getThirdPlace());
-            } else {
-                holder.tvWinnerThird.setVisibility(View.GONE);
-            }
+            holder.tvClubName.setText(
+                    event.getClubName().isEmpty()
+                            ? "Club"
+                            : event.getClubName()
+            );
+
+            holder.tvEventDate.setText(
+                    "📅 " + event.getDate()
+            );
+
+            holder.tvEventVenue.setText(
+                    "📍 " + event.getVenue()
+            );
+            holder.itemView.setOnClickListener(v -> {
+
+                android.content.Intent intent =
+                        new android.content.Intent(
+                                v.getContext(),
+                                EventGalleryDetailsActivity.class
+                        );
+
+                intent.putExtra(
+                        "EVENT_ID",
+                        event.getEventId()
+                );
+
+                intent.putExtra(
+                        "EVENT_NAME",
+                        event.getEventName()
+                );
+
+                v.getContext().startActivity(intent);
+            });
         }
 
         @Override
@@ -140,16 +201,28 @@ public class EventGalleryActivity extends AppCompatActivity {
             return items.size();
         }
 
-        static class ViewHolder extends RecyclerView.ViewHolder {
-            TextView tvWinnerEventName, tvWinnerClub, tvWinnerFirst, tvWinnerSecond, tvWinnerThird;
+        static class ViewHolder
+                extends RecyclerView.ViewHolder {
 
-            ViewHolder(@NonNull View v) {
-                super(v);
-                tvWinnerEventName = v.findViewById(R.id.tvWinnerEventName);
-                tvWinnerClub = v.findViewById(R.id.tvWinnerClub);
-                tvWinnerFirst = v.findViewById(R.id.tvWinnerFirst);
-                tvWinnerSecond = v.findViewById(R.id.tvWinnerSecond);
-                tvWinnerThird = v.findViewById(R.id.tvWinnerThird);
+            TextView tvEventName;
+            TextView tvClubName;
+            TextView tvEventDate;
+            TextView tvEventVenue;
+
+            ViewHolder(@NonNull View itemView) {
+                super(itemView);
+
+                tvEventName =
+                        itemView.findViewById(R.id.tvGalleryEventName);
+
+                tvClubName =
+                        itemView.findViewById(R.id.tvGalleryClubName);
+
+                tvEventDate =
+                        itemView.findViewById(R.id.tvGalleryEventDate);
+
+                tvEventVenue =
+                        itemView.findViewById(R.id.tvGalleryEventVenue);
             }
         }
     }

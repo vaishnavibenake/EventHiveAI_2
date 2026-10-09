@@ -19,11 +19,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.eventhiveai.R;
 import com.example.eventhiveai.models.RegistrationModel;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class CoordinatorRegistrationsActivity extends AppCompatActivity {
 
@@ -62,7 +64,6 @@ public class CoordinatorRegistrationsActivity extends AppCompatActivity {
         recyclerRegistrations.setAdapter(adapter);
 
         btnBack.setOnClickListener(v -> finish());
-
         loadRegistrations();
     }
 
@@ -70,12 +71,13 @@ public class CoordinatorRegistrationsActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
         emptyView.setVisibility(View.GONE);
 
-        com.google.firebase.auth.FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
             progressBar.setVisibility(View.GONE);
             emptyView.setVisibility(View.VISIBLE);
             return;
         }
+
         db.collection("registrations").whereEqualTo("coordinatorId", currentUser.getUid()).get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     progressBar.setVisibility(View.GONE);
@@ -90,6 +92,16 @@ public class CoordinatorRegistrationsActivity extends AppCompatActivity {
                         if (doc.contains("studentEmail")) reg.setStudentEmail(doc.getString("studentEmail"));
                         if (doc.contains("eventDate")) reg.setEventDate(doc.getString("eventDate"));
                         if (doc.contains("status")) reg.setStatus(doc.getString("status"));
+                        if (doc.contains("participationType")) reg.setParticipationType(doc.getString("participationType"));
+                        if (doc.contains("teamName")) reg.setTeamName(doc.getString("teamName"));
+                        if (doc.contains("memberNames")) {
+                            List<String> names = (List<String>) doc.get("memberNames");
+                            reg.setMemberNames(names);
+                        }
+                        if (doc.contains("memberCount")) {
+                            Long mc = doc.getLong("memberCount");
+                            reg.setMemberCount(mc != null ? mc.intValue() : 1);
+                        }
 
                         list.add(reg);
                     }
@@ -103,7 +115,7 @@ public class CoordinatorRegistrationsActivity extends AppCompatActivity {
                 })
                 .addOnFailureListener(e -> {
                     progressBar.setVisibility(View.GONE);
-                    Toast.makeText(CoordinatorRegistrationsActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
@@ -111,9 +123,7 @@ public class CoordinatorRegistrationsActivity extends AppCompatActivity {
         int total = list.size();
         int attended = 0;
         for (RegistrationModel r : list) {
-            if ("attended".equalsIgnoreCase(r.getStatus())) {
-                attended++;
-            }
+            if ("attended".equalsIgnoreCase(r.getStatus())) attended++;
         }
         int pending = total - attended;
 
@@ -133,8 +143,7 @@ public class CoordinatorRegistrationsActivity extends AppCompatActivity {
             this.onMetricsChanged = onMetricsChanged;
         }
 
-        @NonNull
-        @Override
+        @NonNull @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.registration_item, parent, false);
             return new ViewHolder(v);
@@ -144,7 +153,21 @@ public class CoordinatorRegistrationsActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             RegistrationModel item = items.get(position);
             holder.tvRegEventName.setText(item.getEventName());
-            holder.tvRegStudentName.setText("👤 " + item.getStudentName());
+
+            // Show team info if applicable
+            String pType = item.getParticipationType();
+            if ("Team".equals(pType) || "Pair".equals(pType)) {
+                String teamInfo = "👥 " + pType + ": " + item.getTeamName();
+                if (item.getMemberNames() != null && !item.getMemberNames().isEmpty()) {
+                    teamInfo += " (" + String.join(", ", item.getMemberNames()) + ")";
+                } else {
+                    teamInfo += " [" + item.getMemberCount() + " members]";
+                }
+                holder.tvRegStudentName.setText(teamInfo);
+            } else {
+                holder.tvRegStudentName.setText("👤 " + item.getStudentName());
+            }
+
             holder.tvRegStudentEmail.setText("✉️ " + item.getStudentEmail());
             holder.tvRegDate.setText("📅 " + (item.getEventDate().isEmpty() ? "Scheduled" : item.getEventDate()));
 
@@ -170,31 +193,38 @@ public class CoordinatorRegistrationsActivity extends AppCompatActivity {
                 String newStatus = isAttended ? "registered" : "attended";
                 holder.btnToggleAttendance.setEnabled(false);
 
+                // Update registration status
                 db.collection("registrations").document(item.getRegistrationId())
                         .update("status", newStatus)
                         .addOnSuccessListener(unused -> {
+                            // Also update all participation records for this registration
+                            String newAttendance = "attended".equals(newStatus) ? "present" : "pending";
+                            db.collection("participations")
+                                    .whereEqualTo("registrationId", item.getRegistrationId())
+                                    .get()
+                                    .addOnSuccessListener(partSnap -> {
+                                        for (QueryDocumentSnapshot pDoc : partSnap) {
+                                            pDoc.getReference().update("attendance", newAttendance);
+                                        }
+                                    });
+
                             holder.btnToggleAttendance.setEnabled(true);
                             item.setStatus(newStatus);
                             notifyItemChanged(position);
-                            if (onMetricsChanged != null) {
-                                onMetricsChanged.run();
-                            }
+                            if (onMetricsChanged != null) onMetricsChanged.run();
                             String msg = "attended".equals(newStatus)
                                     ? "Marked Present: " + item.getStudentName()
-                                    : "Marked Absent / Pending: " + item.getStudentName();
+                                    : "Marked Absent: " + item.getStudentName();
                             Toast.makeText(holder.itemView.getContext(), msg, Toast.LENGTH_SHORT).show();
                         })
                         .addOnFailureListener(e -> {
                             holder.btnToggleAttendance.setEnabled(true);
-                            Toast.makeText(holder.itemView.getContext(), "Update failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(holder.itemView.getContext(), "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         });
             });
         }
 
-        @Override
-        public int getItemCount() {
-            return items.size();
-        }
+        @Override public int getItemCount() { return items.size(); }
 
         static class ViewHolder extends RecyclerView.ViewHolder {
             TextView tvRegEventName, tvRegStudentName, tvRegStudentEmail, tvRegDate, tvRegStatus;

@@ -12,6 +12,7 @@
         android:orientation="vertical"
         android:padding="20dp">
 
+        <!-- TOP BAR -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="48dp"
@@ -33,41 +34,54 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
-                android:text="Announce Event Winners"
+                android:text="Upload Winners"
                 android:textColor="#F8FAFC"
                 android:textSize="18sp"
                 android:textStyle="bold" />
-
         </LinearLayout>
 
+        <!-- EVENT SELECTOR -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="Event Name *"
+            android:layout_marginTop="16dp"
+            android:text="Select Completed Event *"
             android:textColor="#CBD5E1"
             android:textSize="13sp"
             android:textStyle="bold" />
 
-        <EditText
-            android:id="@+id/etWinnerEvent"
+        <Spinner
+            android:id="@+id/spinnerCompletedEvents"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginTop="6dp"
-            android:background="@drawable/input_background"
-            android:hint="Select or type event name"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp" />
+            android:background="@drawable/input_background" />
 
+        <TextView
+            android:id="@+id/tvParticipationTypeInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Type: Individual"
+            android:textColor="#A78BFA"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+        <!-- Hidden legacy field kept for backward compat -->
+        <EditText
+            android:id="@+id/etWinnerEvent"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+
+        <!-- 1ST PLACE -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:text="🥇 1st Place / Winner *"
-            android:textColor="#CBD5E1"
-            android:textSize="13sp"
+            android:layout_marginTop="20dp"
+            android:text="🥇 1st Place Winner *"
+            android:textColor="#F59E0B"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
         <EditText
@@ -76,19 +90,55 @@
             android:layout_height="50dp"
             android:layout_marginTop="6dp"
             android:background="@drawable/input_background"
-            android:hint="Student Name, Department &amp; Roll Number"
+            android:hint="Winner name"
             android:paddingStart="14dp"
             android:paddingEnd="14dp"
             android:textColor="#FFFFFF"
+            android:textColorHint="#64748B"
             android:textSize="14sp" />
 
+        <EditText
+            android:id="@+id/etFirstDept"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/input_background"
+            android:hint="Department (e.g. CSE)"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#64748B"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:id="@+id/layoutFirstTeam"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <EditText
+                android:id="@+id/etFirstTeamName"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/input_background"
+                android:hint="Team name"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#64748B"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- 2ND PLACE -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:text="🥈 2nd Place / Runner Up"
-            android:textColor="#CBD5E1"
-            android:textSize="13sp"
+            android:layout_marginTop="18dp"
+            android:text="🥈 2nd Place Winner"
+            android:textColor="#94A3B8"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
         <EditText
@@ -97,19 +147,55 @@
             android:layout_height="50dp"
             android:layout_marginTop="6dp"
             android:background="@drawable/input_background"
-            android:hint="Student Name, Department &amp; Roll Number"
+            android:hint="Winner name"
             android:paddingStart="14dp"
             android:paddingEnd="14dp"
             android:textColor="#FFFFFF"
+            android:textColorHint="#64748B"
             android:textSize="14sp" />
 
+        <EditText
+            android:id="@+id/etSecondDept"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/input_background"
+            android:hint="Department"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#64748B"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:id="@+id/layoutSecondTeam"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <EditText
+                android:id="@+id/etSecondTeamName"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/input_background"
+                android:hint="Team name"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#64748B"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- 3RD PLACE -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:text="🥉 3rd Place"
-            android:textColor="#CBD5E1"
-            android:textSize="13sp"
+            android:layout_marginTop="18dp"
+            android:text="🥉 3rd Place Winner"
+            android:textColor="#94A3B8"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
         <EditText
@@ -118,24 +204,63 @@
             android:layout_height="50dp"
             android:layout_marginTop="6dp"
             android:background="@drawable/input_background"
-            android:hint="Student Name, Department &amp; Roll Number"
+            android:hint="Winner name"
             android:paddingStart="14dp"
             android:paddingEnd="14dp"
             android:textColor="#FFFFFF"
+            android:textColorHint="#64748B"
             android:textSize="14sp" />
 
+        <EditText
+            android:id="@+id/etThirdDept"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/input_background"
+            android:hint="Department"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#64748B"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:id="@+id/layoutThirdTeam"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <EditText
+                android:id="@+id/etThirdTeamName"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/input_background"
+                android:hint="Team name"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#64748B"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- PUBLISH BUTTON -->
         <Button
             android:id="@+id/btnPublishWinners"
             android:layout_width="match_parent"
             android:layout_height="54dp"
             android:layout_marginTop="28dp"
             android:backgroundTint="#7C3AED"
-            android:text="Publish &amp; Notify Winners 🏆"
+            android:text="Publish Winners"
             android:textAllCaps="false"
             android:textColor="#FFFFFF"
             android:textSize="15sp"
             android:textStyle="bold" />
 
-    </LinearLayout>
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="40dp" />
 
+    </LinearLayout>
 </ScrollView>

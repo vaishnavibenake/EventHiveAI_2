@@ -1,6 +1,5 @@
 package com.example.eventhiveai;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -18,16 +17,19 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.eventhiveai.admin.EventModel;
 import com.example.eventhiveai.coordinator.EditEventActivity;
-import com.example.eventhiveai.models.RegistrationModel;
+import com.example.eventhiveai.student.TeamRegistrationActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.WriteBatch;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -46,6 +48,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     private TextView tvDetailBudget;
     private TextView tvDetailDeadline;
     private TextView tvDetailDescription;
+    private TextView tvParticipationType;
 
     private LinearLayout layoutRejectionBanner;
     private TextView tvRejectionReason;
@@ -82,6 +85,12 @@ public class EventDetailsActivity extends AppCompatActivity {
         loadEventDetails();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (eventId != null) loadEventDetails();
+    }
+
     private void initializeViews() {
         btnBack = findViewById(R.id.btnBack);
         tvDetailStatus = findViewById(R.id.tvDetailStatus);
@@ -106,6 +115,9 @@ public class EventDetailsActivity extends AppCompatActivity {
 
         btnStudentRegister = findViewById(R.id.btnStudentRegister);
         btnCoordinatorEdit = findViewById(R.id.btnCoordinatorEdit);
+
+        // Participation type text (may be null in old layouts)
+        tvParticipationType = findViewById(R.id.tvParticipationType);
 
         btnBack.setOnClickListener(v -> finish());
         btnApproveDetail.setOnClickListener(v -> approveEvent());
@@ -135,10 +147,9 @@ public class EventDetailsActivity extends AppCompatActivity {
                     }
 
                     currentEvent = doc.toObject(EventModel.class);
-                    if (currentEvent == null) {
-                        currentEvent = new EventModel();
-                    }
+                    if (currentEvent == null) currentEvent = new EventModel();
                     currentEvent.setEventId(doc.getId());
+
                     if (doc.contains("eventName")) currentEvent.setEventName(doc.getString("eventName"));
                     if (doc.contains("clubName")) currentEvent.setClubName(doc.getString("clubName"));
                     if (doc.contains("description")) currentEvent.setDescription(doc.getString("description"));
@@ -160,12 +171,20 @@ public class EventDetailsActivity extends AppCompatActivity {
                     if (doc.contains("status")) currentEvent.setStatus(doc.getString("status"));
                     if (doc.contains("rejectionReason")) currentEvent.setRejectionReason(doc.getString("rejectionReason"));
                     if (doc.contains("coordinatorId")) currentEvent.setCoordinatorId(doc.getString("coordinatorId"));
+                    if (doc.contains("participationType")) currentEvent.setParticipationType(doc.getString("participationType"));
+                    if (doc.contains("minTeamSize")) {
+                        Long v = doc.getLong("minTeamSize");
+                        currentEvent.setMinTeamSize(v != null ? v.intValue() : 1);
+                    }
+                    if (doc.contains("maxTeamSize")) {
+                        Long v = doc.getLong("maxTeamSize");
+                        currentEvent.setMaxTeamSize(v != null ? v.intValue() : 1);
+                    }
 
                     bindEventData();
                 })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(EventDetailsActivity.this, "Failed to load event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+                .addOnFailureListener(e ->
+                        Toast.makeText(EventDetailsActivity.this, "Failed to load event: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
     private void bindEventData() {
@@ -189,6 +208,19 @@ public class EventDetailsActivity extends AppCompatActivity {
 
         tvDetailDescription.setText(currentEvent.getDescription().isEmpty() ? "No description provided." : currentEvent.getDescription());
 
+        // Show participation type info
+        String pType = currentEvent.getParticipationType();
+        String partInfo = "👤 Participation: " + pType;
+        if ("Pair".equals(pType)) {
+            partInfo += " (exactly 2 members)";
+        } else if ("Team".equals(pType)) {
+            partInfo += " (" + currentEvent.getMinTeamSize() + "-" + currentEvent.getMaxTeamSize() + " members)";
+        }
+        if (tvParticipationType != null) {
+            tvParticipationType.setText(partInfo);
+            tvParticipationType.setVisibility(View.VISIBLE);
+        }
+
         // Status badge styling
         String status = currentEvent.getStatus().toUpperCase();
         tvDetailStatus.setText(status);
@@ -198,12 +230,15 @@ public class EventDetailsActivity extends AppCompatActivity {
         } else if ("REJECTED".equals(status)) {
             tvDetailStatus.setBackgroundColor(Color.parseColor("#3D1616"));
             tvDetailStatus.setTextColor(Color.parseColor("#EF4444"));
+        } else if ("COMPLETED".equals(status)) {
+            tvDetailStatus.setBackgroundColor(Color.parseColor("#1E293B"));
+            tvDetailStatus.setTextColor(Color.parseColor("#8B5CF6"));
         } else {
             tvDetailStatus.setBackgroundColor(Color.parseColor("#3D2F12"));
             tvDetailStatus.setTextColor(Color.parseColor("#F59E0B"));
         }
 
-        // Show Rejection Reason if rejected
+        // Rejection reason
         if ("rejected".equalsIgnoreCase(currentEvent.getStatus()) && !currentEvent.getRejectionReason().isEmpty()) {
             layoutRejectionBanner.setVisibility(View.VISIBLE);
             tvRejectionReason.setText(currentEvent.getRejectionReason());
@@ -225,11 +260,19 @@ public class EventDetailsActivity extends AppCompatActivity {
             btnStudentRegister.setVisibility(View.GONE);
             btnCoordinatorEdit.setVisibility(View.VISIBLE);
         } else {
-            // Student
             layoutAdminActions.setVisibility(View.GONE);
             btnCoordinatorEdit.setVisibility(View.GONE);
             if ("approved".equalsIgnoreCase(currentEvent.getStatus())) {
                 btnStudentRegister.setVisibility(View.VISIBLE);
+                // Set button text based on participation type
+                String pTypeBtn = currentEvent.getParticipationType();
+                if ("Pair".equals(pTypeBtn)) {
+                    btnStudentRegister.setText("Register as Pair →");
+                } else if ("Team".equals(pTypeBtn)) {
+                    btnStudentRegister.setText("Register Team →");
+                } else {
+                    btnStudentRegister.setText("Register For Event →");
+                }
                 checkStudentRegistrationStatus();
             } else {
                 btnStudentRegister.setVisibility(View.GONE);
@@ -244,9 +287,8 @@ public class EventDetailsActivity extends AppCompatActivity {
                     Toast.makeText(EventDetailsActivity.this, "Event approved! Now live for students.", Toast.LENGTH_SHORT).show();
                     loadEventDetails();
                 })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(EventDetailsActivity.this, "Failed to approve: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+                .addOnFailureListener(e ->
+                        Toast.makeText(EventDetailsActivity.this, "Failed to approve: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
     private void showRejectDialog() {
@@ -265,16 +307,14 @@ public class EventDetailsActivity extends AppCompatActivity {
                 Toast.makeText(EventDetailsActivity.this, "Rejection reason cannot be empty.", Toast.LENGTH_LONG).show();
                 return;
             }
-
             db.collection("events").document(eventId)
                     .update("status", "rejected", "rejectionReason", reason)
                     .addOnSuccessListener(unused -> {
                         Toast.makeText(EventDetailsActivity.this, "Event rejected with reason saved.", Toast.LENGTH_SHORT).show();
                         loadEventDetails();
                     })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(EventDetailsActivity.this, "Failed to reject: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    });
+                    .addOnFailureListener(e ->
+                            Toast.makeText(EventDetailsActivity.this, "Failed to reject: " + e.getMessage(), Toast.LENGTH_SHORT).show());
         });
 
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
@@ -285,7 +325,8 @@ public class EventDetailsActivity extends AppCompatActivity {
         FirebaseUser user = auth.getCurrentUser();
         if (user == null) return;
 
-        db.collection("registrations")
+        // Check participations collection (works for all types)
+        db.collection("participations")
                 .whereEqualTo("eventId", eventId)
                 .whereEqualTo("studentId", user.getUid())
                 .get()
@@ -311,11 +352,29 @@ public class EventDetailsActivity extends AppCompatActivity {
             return;
         }
 
+        String pType = currentEvent.getParticipationType();
+
+        if ("Pair".equals(pType) || "Team".equals(pType)) {
+            // Open TeamRegistrationActivity
+            Intent intent = new Intent(this, TeamRegistrationActivity.class);
+            intent.putExtra("EVENT_ID", eventId);
+            intent.putExtra("EVENT_NAME", currentEvent.getEventName());
+            intent.putExtra("EVENT_DATE", currentEvent.getDate());
+            intent.putExtra("EVENT_VENUE", currentEvent.getVenue());
+            intent.putExtra("COORDINATOR_ID", currentEvent.getCoordinatorId());
+            intent.putExtra("PARTICIPATION_TYPE", pType);
+            intent.putExtra("MIN_TEAM_SIZE", currentEvent.getMinTeamSize());
+            intent.putExtra("MAX_TEAM_SIZE", currentEvent.getMaxTeamSize());
+            startActivity(intent);
+            return;
+        }
+
+        // Individual registration flow
         btnStudentRegister.setEnabled(false);
         btnStudentRegister.setText("Checking availability...");
 
-        // 2. Check Duplicate Registration
-        db.collection("registrations")
+        // 2. Check Duplicate
+        db.collection("participations")
                 .whereEqualTo("eventId", eventId)
                 .whereEqualTo("studentId", user.getUid())
                 .get()
@@ -323,7 +382,7 @@ public class EventDetailsActivity extends AppCompatActivity {
                     if (!dupSnapshots.isEmpty()) {
                         btnStudentRegister.setText("Already Registered ✓");
                         btnStudentRegister.setEnabled(false);
-                        Toast.makeText(EventDetailsActivity.this, "Already Registered: You are already registered for this event.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "You are already registered for this event.", Toast.LENGTH_LONG).show();
                         return;
                     }
 
@@ -331,43 +390,45 @@ public class EventDetailsActivity extends AppCompatActivity {
                     if (currentEvent.getMaxParticipants() > 0) {
                         db.collection("registrations")
                                 .whereEqualTo("eventId", eventId)
-                                .whereEqualTo("status", "registered")
                                 .get()
                                 .addOnSuccessListener(countSnapshots -> {
                                     if (countSnapshots.size() >= currentEvent.getMaxParticipants()) {
                                         btnStudentRegister.setText("Registration Full");
                                         btnStudentRegister.setEnabled(false);
-                                        Toast.makeText(EventDetailsActivity.this, "Registration Full: Event has reached maximum capacity.", Toast.LENGTH_LONG).show();
+                                        Toast.makeText(this, "Event has reached maximum capacity.", Toast.LENGTH_LONG).show();
                                     } else {
-                                        proceedWithRegistration(user);
+                                        proceedWithIndividualRegistration(user);
                                     }
                                 })
                                 .addOnFailureListener(e -> {
-                                    btnStudentRegister.setEnabled(true);
-                                    btnStudentRegister.setText("Register For Event →");
-                                    Toast.makeText(EventDetailsActivity.this, "Error verifying capacity: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    resetRegButton();
+                                    Toast.makeText(this, "Error verifying capacity: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                 });
                     } else {
-                        proceedWithRegistration(user);
+                        proceedWithIndividualRegistration(user);
                     }
                 })
                 .addOnFailureListener(e -> {
-                    btnStudentRegister.setEnabled(true);
-                    btnStudentRegister.setText("Register For Event →");
-                    Toast.makeText(EventDetailsActivity.this, "Error checking registration: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    resetRegButton();
+                    Toast.makeText(this, "Error checking registration: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
-    private void proceedWithRegistration(FirebaseUser user) {
-        // Fetch student profile details from users collection
+    private void proceedWithIndividualRegistration(FirebaseUser user) {
         db.collection("users").document(user.getUid()).get()
                 .addOnSuccessListener(userDoc -> {
                     String studentName = userDoc.exists() && userDoc.getString("name") != null
                             ? userDoc.getString("name") : "Student";
                     String studentEmail = user.getEmail() != null ? user.getEmail() : "";
+                    String department = userDoc.exists() && userDoc.getString("department") != null
+                            ? userDoc.getString("department") : "";
 
                     String registrationId = "reg_" + System.currentTimeMillis() + "_" + user.getUid().substring(0, 5);
+                    String participationId = "part_" + System.currentTimeMillis() + "_" + user.getUid().substring(0, 5);
 
+                    WriteBatch batch = db.batch();
+
+                    // Registration doc
                     Map<String, Object> regData = new HashMap<>();
                     regData.put("registrationId", registrationId);
                     regData.put("eventId", eventId);
@@ -378,46 +439,75 @@ public class EventDetailsActivity extends AppCompatActivity {
                     regData.put("studentId", user.getUid());
                     regData.put("studentName", studentName);
                     regData.put("studentEmail", studentEmail);
+                    regData.put("participationType", "Individual");
+                    regData.put("memberIds", Arrays.asList(user.getUid()));
+                    regData.put("memberNames", Arrays.asList(studentName));
+                    regData.put("memberCount", 1);
+                    regData.put("department", department);
                     regData.put("status", "registered");
                     regData.put("registeredAt", FieldValue.serverTimestamp());
+                    batch.set(db.collection("registrations").document(registrationId), regData);
 
-                    db.collection("registrations").document(registrationId)
-                            .set(regData)
+                    // Participation doc
+                    Map<String, Object> partData = new HashMap<>();
+                    partData.put("participationId", participationId);
+                    partData.put("studentId", user.getUid());
+                    partData.put("studentName", studentName);
+                    partData.put("studentEmail", studentEmail);
+                    partData.put("department", department);
+                    partData.put("eventId", eventId);
+                    partData.put("eventName", currentEvent.getEventName());
+                    partData.put("eventDate", currentEvent.getDate());
+                    partData.put("eventVenue", currentEvent.getVenue());
+                    partData.put("registrationId", registrationId);
+                    partData.put("teamId", "");
+                    partData.put("teamName", "");
+                    partData.put("participationType", "Individual");
+                    partData.put("attendance", "pending");
+                    partData.put("result", "none");
+                    partData.put("status", "registered");
+                    partData.put("createdAt", FieldValue.serverTimestamp());
+                    batch.set(db.collection("participations").document(participationId), partData);
+
+                    batch.commit()
                             .addOnSuccessListener(unused -> {
                                 btnStudentRegister.setText("Registered ✓");
                                 btnStudentRegister.setEnabled(false);
                                 btnStudentRegister.setBackgroundColor(Color.parseColor("#059669"));
-                                Toast.makeText(EventDetailsActivity.this, "Successfully registered for " + currentEvent.getEventName() + "!", Toast.LENGTH_LONG).show();
+                                Toast.makeText(this, "Successfully registered for " + currentEvent.getEventName() + "!", Toast.LENGTH_LONG).show();
                             })
                             .addOnFailureListener(e -> {
-                                btnStudentRegister.setEnabled(true);
-                                btnStudentRegister.setText("Register For Event →");
-                                Toast.makeText(EventDetailsActivity.this, "Registration failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                resetRegButton();
+                                Toast.makeText(this, "Registration failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                             });
                 })
                 .addOnFailureListener(e -> {
-                    btnStudentRegister.setEnabled(true);
-                    btnStudentRegister.setText("Register For Event →");
-                    Toast.makeText(EventDetailsActivity.this, "Failed to retrieve student profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    resetRegButton();
+                    Toast.makeText(this, "Failed to retrieve student profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
-    private boolean isRegistrationOpen(String deadline) {
-        if (deadline == null || deadline.trim().isEmpty()) {
-            return true;
+    private void resetRegButton() {
+        btnStudentRegister.setEnabled(true);
+        String pType = currentEvent != null ? currentEvent.getParticipationType() : "Individual";
+        if ("Pair".equals(pType)) {
+            btnStudentRegister.setText("Register as Pair →");
+        } else if ("Team".equals(pType)) {
+            btnStudentRegister.setText("Register Team →");
+        } else {
+            btnStudentRegister.setText("Register For Event →");
         }
+    }
 
+    private boolean isRegistrationOpen(String deadline) {
+        if (deadline == null || deadline.trim().isEmpty()) return true;
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             Date deadlineDate = sdf.parse(deadline);
             Date now = new Date();
-            if (deadlineDate != null && now.after(deadlineDate)) {
-                return false;
-            }
+            return deadlineDate == null || !now.after(deadlineDate);
         } catch (Exception e) {
-            // If date format differs, allow registration
             return true;
         }
-        return true;
     }
 }
