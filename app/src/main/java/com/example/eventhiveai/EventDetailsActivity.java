@@ -386,27 +386,9 @@ public class EventDetailsActivity extends AppCompatActivity {
                         return;
                     }
 
-                    // 3. Check Capacity
-                    if (currentEvent.getMaxParticipants() > 0) {
-                        db.collection("registrations")
-                                .whereEqualTo("eventId", eventId)
-                                .get()
-                                .addOnSuccessListener(countSnapshots -> {
-                                    if (countSnapshots.size() >= currentEvent.getMaxParticipants()) {
-                                        btnStudentRegister.setText("Registration Full");
-                                        btnStudentRegister.setEnabled(false);
-                                        Toast.makeText(this, "Event has reached maximum capacity.", Toast.LENGTH_LONG).show();
-                                    } else {
-                                        proceedWithIndividualRegistration(user);
-                                    }
-                                })
-                                .addOnFailureListener(e -> {
-                                    resetRegButton();
-                                    Toast.makeText(this, "Error verifying capacity: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                });
-                    } else {
-                        proceedWithIndividualRegistration(user);
-                    }
+                    // Proceed directly with individual registration
+                    // (Collection-wide capacity read on /registrations removed to comply with strict Firestore privacy rules)
+                    proceedWithIndividualRegistration(user);
                 })
                 .addOnFailureListener(e -> {
                     resetRegButton();
@@ -478,6 +460,7 @@ public class EventDetailsActivity extends AppCompatActivity {
                             })
                             .addOnFailureListener(e -> {
                                 resetRegButton();
+                                android.util.Log.e("EventDetailsActivity", "Individual registration WriteBatch failed: " + e.getMessage(), e);
                                 Toast.makeText(this, "Registration failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                             });
                 })

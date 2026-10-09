@@ -139,6 +139,19 @@
                 android:textColor="#CBD5E1"
                 android:textSize="13sp" />
 
+            <Button
+                android:id="@+id/btnAssignCoordinator"
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                android:layout_marginTop="12dp"
+                android:backgroundTint="#7C3AED"
+                android:text="👤 Assign / Change Coordinator"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
         </LinearLayout>
 
         <!-- CLUB EVENTS HEADER -->
