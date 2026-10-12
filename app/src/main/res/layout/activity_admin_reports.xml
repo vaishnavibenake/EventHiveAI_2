@@ -3,30 +3,30 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0A0D18"
+    android:background="?attr/appBg"
     android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="16dp">
 
         <!-- TOP BAR -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="52dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <ImageButton
                 android:id="@+id/btnBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_logout"
                 android:rotation="180"
-                app:tint="#F8FAFC"
+                app:tint="?attr/customTextColorPrimary"
                 android:contentDescription="Back" />
 
             <TextView
@@ -35,173 +35,417 @@
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
                 android:text="Reports &amp; Analytics"
-                android:textColor="#F8FAFC"
-                android:textSize="20sp"
+                android:textColor="?attr/customTextColorPrimary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnDownloadPdf"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:backgroundTint="#7C3AED"
+                android:text="Export PDF"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
         </LinearLayout>
 
-        <!-- SUMMARY METRICS CARD -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp"
+            android:indeterminateTint="#7C3AED"
+            android:visibility="gone" />
+
+        <!-- KPI SUMMARY GRID (ROW 1: EVENTS) -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Event Lifecycle Overview"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:background="#171A27"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Event Summary Overview"
-                android:textColor="#F8FAFC"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
+            <!-- TOTAL EVENTS -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:orientation="horizontal">
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:background="?attr/cardBg"
+                android:orientation="vertical"
+                android:padding="14dp">
 
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:text="Total Proposals"
+                    android:textColor="?attr/customTextColorSecondary"
+                    android:textSize="11sp" />
 
-                    <TextView
-                        android:id="@+id/tvReportTotalEvents"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textColor="#FFFFFF"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Total Events"
-                        android:textColor="#94A3B8"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:id="@+id/tvTotalEvents"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:layout_marginTop="4dp"
+                    android:text="0"
+                    android:textColor="?attr/customTextColorPrimary"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/tvReportApprovedEvents"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textColor="#10B981"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
+            <!-- APPROVED -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="3dp"
+                android:layout_marginEnd="3dp"
+                android:background="?attr/cardBg"
+                android:orientation="vertical"
+                android:padding="14dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Approved"
-                        android:textColor="#94A3B8"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:text="Approved Live"
+                    android:textColor="?attr/customTextColorSecondary"
+                    android:textSize="11sp" />
 
-                    <TextView
-                        android:id="@+id/tvReportRejectedEvents"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textColor="#EF4444"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/tvApprovedEvents"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="0"
+                    android:textColor="#10B981"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Rejected"
-                        android:textColor="#94A3B8"
-                        android:textSize="12sp" />
-                </LinearLayout>
+            <!-- PENDING -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:background="?attr/cardBg"
+                android:orientation="vertical"
+                android:padding="14dp">
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Pending Review"
+                    android:textColor="?attr/customTextColorSecondary"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/tvPendingEvents"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="0"
+                    android:textColor="#F59E0B"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
         </LinearLayout>
 
-        <!-- CLUB PERFORMANCE BREAKDOWN CARD -->
+        <!-- KPI SUMMARY GRID (ROW 2: REJECTED, CLUBS, TOTAL CLUBS) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="#171A27"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- REJECTED -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Club Activity &amp; Performance"
-                android:textColor="#F8FAFC"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:background="?attr/cardBg"
+                android:orientation="vertical"
+                android:padding="14dp">
 
-            <TextView
-                android:id="@+id/tvClubPerformanceSummary"
-                android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Rejected Proposals"
+                    android:textColor="?attr/customTextColorSecondary"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/tvRejectedEvents"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="0"
+                    android:textColor="#EF4444"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- ACTIVE CLUBS -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:lineSpacingExtra="4dp"
-                android:text="Calculating club participation metrics..."
-                android:textColor="#CBD5E1"
-                android:textSize="13sp" />
+                android:layout_weight="1"
+                android:layout_marginStart="3dp"
+                android:layout_marginEnd="3dp"
+                android:background="?attr/cardBg"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Active Clubs"
+                    android:textColor="?attr/customTextColorSecondary"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/tvActiveClubs"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="0"
+                    android:textColor="#8B5CF6"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- TOTAL CLUBS -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:background="?attr/cardBg"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Total Clubs"
+                    android:textColor="?attr/customTextColorSecondary"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/tvTotalClubs"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="0"
+                    android:textColor="?attr/customTextColorPrimary"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
         </LinearLayout>
 
-        <!-- REGISTRATIONS & ATTENDANCE CARD -->
+        <!-- VISUAL RATIO & PROGRESS BREAKDOWN -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Event Approval &amp; Lifecycle Distribution"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="#171A27"
+            android:layout_marginTop="8dp"
+            android:background="?attr/cardBg"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Approved Bar -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Approved Rate"
+                    android:textColor="?attr/customTextColorSecondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvApprovedPercent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0%"
+                    android:textColor="#10B981"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <ProgressBar
+                android:id="@+id/progressApproved"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_marginTop="6dp"
+                android:max="100"
+                android:progress="0"
+                android:progressTint="#10B981" />
+
+            <!-- Pending Bar -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Pending Queue Rate"
+                    android:textColor="?attr/customTextColorSecondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvPendingPercent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0%"
+                    android:textColor="#F59E0B"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <ProgressBar
+                android:id="@+id/progressPending"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_marginTop="6dp"
+                android:max="100"
+                android:progress="0"
+                android:progressTint="#F59E0B" />
+
+            <!-- Rejected Bar -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Rejection Rate"
+                    android:textColor="?attr/customTextColorSecondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvRejectedPercent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0%"
+                    android:textColor="#EF4444"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <ProgressBar
+                android:id="@+id/progressRejected"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_marginTop="6dp"
+                android:max="100"
+                android:progress="0"
+                android:progressTint="#EF4444" />
+
+        </LinearLayout>
+
+        <!-- STUDENT REGISTRATIONS & ATTENDANCE AUDIT -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Student Engagement &amp; Attendance Audit"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="?attr/cardBg"
             android:orientation="vertical"
             android:padding="16dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Student Registrations"
-                android:textColor="#F8FAFC"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:text="Total Student Registrations &amp; Verified Presence"
+                android:textColor="?attr/customTextColorSecondary"
+                android:textSize="12sp" />
 
             <TextView
                 android:id="@+id/tvTotalRegistrations"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="0"
-                android:textColor="#8B5CF6"
-                android:textSize="28sp"
+                android:layout_marginTop="6dp"
+                android:text="0 Registrations (0 Attended • 0%)"
+                android:textColor="#38BDF8"
+                android:textSize="17sp"
                 android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- CLUB PERFORMANCE BREAKDOWN -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Club Activity Distribution"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="24dp"
+            android:background="?attr/cardBg"
+            android:orientation="vertical"
+            android:padding="16dp">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:id="@+id/tvClubPerformanceSummary"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Total verified student event registrations across all clubs."
-                android:textColor="#94A3B8"
-                android:textSize="12sp" />
-
+                android:lineSpacingExtra="4dp"
+                android:text="Loading club performance breakdown..."
+                android:textColor="?attr/customTextColorPrimary"
+                android:textSize="13sp" />
         </LinearLayout>
 
     </LinearLayout>
-
 </ScrollView>

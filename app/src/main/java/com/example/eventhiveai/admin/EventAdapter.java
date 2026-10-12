@@ -1,583 +1,175 @@
 package com.example.eventhiveai.admin;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.eventhiveai.EventDetailsActivity;
 import com.example.eventhiveai.R;
-import com.google.firebase.firestore.FieldValue;
-import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHolder> {
 
-    private ArrayList<EventModel> eventList;
-    private String userRole = "ADMIN";
-    private boolean showActionButtons = true;
-
     public interface OnEventActionListener {
-        void onEventStatusChanged();
+        void onApprove(EventModel event);
+        void onReject(EventModel event);
     }
 
+    private Context context;
+    private List<EventModel> eventList;
     private OnEventActionListener listener;
 
-    public EventAdapter(ArrayList<EventModel> eventList) {
+    private String userRole = "ADMIN";
+    private boolean isReadOnly = false;
+    private Runnable onRefreshCallback;
+    private long lastClickTime = 0;
+
+    public EventAdapter(Context context, List<EventModel> eventList, OnEventActionListener listener) {
+        this.context = context;
         this.eventList = eventList;
-        this.showActionButtons = true;
+        this.listener = listener;
     }
 
-    public EventAdapter(
-            ArrayList<EventModel> eventList,
-            String userRole,
-            boolean showActionButtons,
-            OnEventActionListener listener) {
-
+    public EventAdapter(List<EventModel> eventList, String userRole, boolean isReadOnly, Runnable onRefreshCallback) {
         this.eventList = eventList;
         this.userRole = userRole;
-        this.showActionButtons = showActionButtons;
-        this.listener = listener;
+        this.isReadOnly = isReadOnly;
+        this.onRefreshCallback = onRefreshCallback;
     }
 
     @NonNull
     @Override
-    public EventViewHolder onCreateViewHolder(
-            @NonNull ViewGroup parent,
-            int viewType) {
-
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.event_item, parent, false);
-
+    public EventViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.event_item, parent, false);
         return new EventViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(
-            @NonNull EventViewHolder holder,
-            int position) {
-
+    public void onBindViewHolder(@NonNull EventViewHolder holder, int position) {
         EventModel event = eventList.get(position);
 
-        Context context = holder.itemView.getContext();
+        String title = event.getEventName();
+        holder.tvTitle.setText(title != null && !title.trim().isEmpty() ? title : "Untitled Event");
 
-        holder.tvEventName.setText(event.getEventName());
+        String club = event.getClubName();
+        holder.tvClub.setText("🏛️ " + (club != null && !club.trim().isEmpty() ? club : "College Club"));
 
-        holder.tvClubName.setText(
-                event.getClubName().isEmpty()
-                        ? "College Club"
-                        : event.getClubName()
-        );
+        String date = event.getDate() != null ? event.getDate() : "Date TBA";
+        String time = event.getStartTime() != null ? event.getStartTime() : "";
+        String venue = event.getVenue() != null ? event.getVenue() : "Venue TBA";
+        holder.tvDateVenue.setText("📅 " + date + (!time.isEmpty() ? " • " + time : "") + " | 📍 " + venue);
 
-        holder.tvEventDate.setText(
-                "📅 " +
-                        (event.getDate().isEmpty()
-                                ? "TBA"
-                                : event.getDate())
-        );
+        String dept = event.getDepartment();
+        if (holder.tvDepartment != null) {
+            holder.tvDepartment.setText("Dept: " + (dept != null && !dept.isEmpty() ? dept : "All"));
+        }
 
-        holder.tvVenue.setText(
-                "📍 " +
-                        (event.getVenue().isEmpty()
-                                ? "Campus"
-                                : event.getVenue())
-        );
-
-        // -----------------------------
-        // STATUS BADGE
-        // -----------------------------
-
-        String status = event.getStatus().toUpperCase();
-
-        if (holder.tvStatusBadge != null) {
-
-            holder.tvStatusBadge.setText(status);
-
-            if ("APPROVED".equals(status)) {
-
-                holder.tvStatusBadge.setBackgroundColor(
-                        Color.parseColor("#11382A")
-                );
-
-                holder.tvStatusBadge.setTextColor(
-                        Color.parseColor("#10B981")
-                );
-
-            } else if ("REJECTED".equals(status)) {
-
-                holder.tvStatusBadge.setBackgroundColor(
-                        Color.parseColor("#3D1616")
-                );
-
-                holder.tvStatusBadge.setTextColor(
-                        Color.parseColor("#EF4444")
-                );
-
-            } else if ("COMPLETED".equals(status)) {
-
-                holder.tvStatusBadge.setBackgroundColor(
-                        Color.parseColor("#312E81")
-                );
-
-                holder.tvStatusBadge.setTextColor(
-                        Color.parseColor("#A78BFA")
-                );
-
-            } else if ("CANCELLED".equals(status)) {
-
-                holder.tvStatusBadge.setBackgroundColor(
-                        Color.parseColor("#3D1616")
-                );
-
-                holder.tvStatusBadge.setTextColor(
-                        Color.parseColor("#F87171")
-                );
-
+        if (holder.tvBudget != null) {
+            double budget = event.getBudget();
+            if (budget > 0) {
+                holder.tvBudget.setVisibility(View.VISIBLE);
+                holder.tvBudget.setText("💰 ₹" + (int) budget);
             } else {
-
-                holder.tvStatusBadge.setBackgroundColor(
-                        Color.parseColor("#3D2F12")
-                );
-
-                holder.tvStatusBadge.setTextColor(
-                        Color.parseColor("#F59E0B")
-                );
+                holder.tvBudget.setVisibility(View.GONE);
             }
         }
 
-        // -----------------------------
-        // ADMIN ACTION BUTTONS
-        // -----------------------------
-
-        if (holder.layoutActionButtons != null) {
-
-            if ("ADMIN".equals(userRole)
-                    && showActionButtons
-                    && "pending".equalsIgnoreCase(event.getStatus())) {
-
-                holder.layoutActionButtons.setVisibility(View.VISIBLE);
-
+        if (holder.tvCapacity != null) {
+            int maxP = event.getMaxParticipants();
+            if (maxP > 0) {
+                holder.tvCapacity.setVisibility(View.VISIBLE);
+                holder.tvCapacity.setText("👥 " + maxP + " Seats");
             } else {
-
-                holder.layoutActionButtons.setVisibility(View.GONE);
+                holder.tvCapacity.setVisibility(View.GONE);
             }
         }
 
-        // -----------------------------
-        // COORDINATOR COMPLETED BUTTON
-        // -----------------------------
-
-        if (holder.btnMarkCompleted != null) {
-
-            if ("COORDINATOR".equals(userRole)
-                    && "approved".equalsIgnoreCase(event.getStatus())) {
-
-                holder.btnMarkCompleted.setVisibility(View.VISIBLE);
-
-            } else {
-
-                holder.btnMarkCompleted.setVisibility(View.GONE);
-            }
+        String rawStatus = event.getStatus() != null ? event.getStatus().toLowerCase() : "pending";
+        if ("approved".equals(rawStatus)) {
+            holder.tvStatus.setText("APPROVED");
+            holder.tvStatus.setBackgroundColor(Color.parseColor("#132A1C"));
+            holder.tvStatus.setTextColor(Color.parseColor("#4ADE80"));
+        } else if ("rejected".equals(rawStatus)) {
+            holder.tvStatus.setText("REJECTED");
+            holder.tvStatus.setBackgroundColor(Color.parseColor("#451A1A"));
+            holder.tvStatus.setTextColor(Color.parseColor("#F87171"));
+        } else if ("active".equals(rawStatus)) {
+            holder.tvStatus.setText("ACTIVE NOW");
+            holder.tvStatus.setBackgroundColor(Color.parseColor("#1E3A8A"));
+            holder.tvStatus.setTextColor(Color.parseColor("#60A5FA"));
+        } else {
+            holder.tvStatus.setText("PENDING REVIEW");
+            holder.tvStatus.setBackgroundColor(Color.parseColor("#2E1C4D"));
+            holder.tvStatus.setTextColor(Color.parseColor("#C084FC"));
         }
 
-        // -----------------------------
-        // APPROVE EVENT
-        // -----------------------------
+        // Show action buttons only if pending review and in review queue mode
+        boolean isPending = "pending".equals(rawStatus);
+        if (isPending && listener != null && !isReadOnly) {
+            holder.btnApprove.setVisibility(View.VISIBLE);
+            holder.btnReject.setVisibility(View.VISIBLE);
+        } else {
+            holder.btnApprove.setVisibility(View.GONE);
+            holder.btnReject.setVisibility(View.GONE);
+        }
 
+        // Debounce tap protection
         holder.btnApprove.setOnClickListener(v -> {
-
-            FirebaseFirestore.getInstance()
-                    .collection("events")
-                    .document(event.getEventId())
-                    .update(
-                            "status",
-                            "approved",
-                            "rejectionReason",
-                            ""
-                    )
-                    .addOnSuccessListener(unused -> {
-
-                        Map<String, Object> notification =
-                                new HashMap<>();
-
-                        notification.put(
-                                "title",
-                                "Event approved: "
-                                        + event.getEventName()
-                        );
-
-                        notification.put(
-                                "message",
-                                "Your event is approved and is now visible to students."
-                        );
-
-                        notification.put(
-                                "recipientRole",
-                                "STUDENT"
-                        );
-
-                        notification.put(
-                                "timestamp",
-                                FieldValue.serverTimestamp()
-                        );
-
-                        FirebaseFirestore
-                                .getInstance()
-                                .collection("notifications")
-                                .add(notification);
-
-                        Toast.makeText(
-                                context,
-                                "Event Approved!",
-                                Toast.LENGTH_SHORT
-                        ).show();
-
-                        if (listener != null) {
-
-                            listener.onEventStatusChanged();
-
-                        } else {
-
-                            int adapterPosition =
-                                    holder.getAdapterPosition();
-
-                            if (adapterPosition !=
-                                    RecyclerView.NO_POSITION) {
-
-                                eventList.remove(adapterPosition);
-
-                                notifyItemRemoved(adapterPosition);
-                            }
-                        }
-                    })
-                    .addOnFailureListener(e -> {
-
-                        Toast.makeText(
-                                context,
-                                "Failed: " + e.getMessage(),
-                                Toast.LENGTH_SHORT
-                        ).show();
-                    });
+            if (System.currentTimeMillis() - lastClickTime < 1000) return;
+            lastClickTime = System.currentTimeMillis();
+            if (listener != null) listener.onApprove(event);
         });
-
-        // -----------------------------
-        // REJECT EVENT
-        // -----------------------------
 
         holder.btnReject.setOnClickListener(v -> {
-
-            AlertDialog.Builder builder =
-                    new AlertDialog.Builder(context);
-
-            builder.setTitle(
-                    "Reject Event: "
-                            + event.getEventName()
-            );
-
-            builder.setMessage(
-                    "Please enter the reason for rejecting this event proposal:"
-            );
-
-            final EditText input =
-                    new EditText(context);
-
-            input.setHint(
-                    "Rejection reason (required)..."
-            );
-
-            input.setPadding(
-                    40,
-                    30,
-                    40,
-                    30
-            );
-
-            builder.setView(input);
-
-            builder.setPositiveButton(
-                    "Reject",
-                    (dialog, which) -> {
-
-                        String reason =
-                                input.getText()
-                                        .toString()
-                                        .trim();
-
-                        if (TextUtils.isEmpty(reason)) {
-
-                            Toast.makeText(
-                                    context,
-                                    "Rejection reason cannot be empty.",
-                                    Toast.LENGTH_LONG
-                            ).show();
-
-                            return;
-                        }
-
-                        FirebaseFirestore
-                                .getInstance()
-                                .collection("events")
-                                .document(event.getEventId())
-                                .update(
-                                        "status",
-                                        "rejected",
-                                        "rejectionReason",
-                                        reason
-                                )
-                                .addOnSuccessListener(unused -> {
-
-                                    Map<String, Object> notification =
-                                            new HashMap<>();
-
-                                    notification.put(
-                                            "title",
-                                            "Event proposal declined: "
-                                                    + event.getEventName()
-                                    );
-
-                                    notification.put(
-                                            "message",
-                                            "Reason: " + reason
-                                    );
-
-                                    notification.put(
-                                            "recipientRole",
-                                            "COORDINATOR"
-                                    );
-
-                                    notification.put(
-                                            "targetUid",
-                                            event.getCoordinatorId()
-                                    );
-
-                                    notification.put(
-                                            "timestamp",
-                                            FieldValue.serverTimestamp()
-                                    );
-
-                                    FirebaseFirestore
-                                            .getInstance()
-                                            .collection("notifications")
-                                            .add(notification);
-
-                                    Toast.makeText(
-                                            context,
-                                            "Event Rejected.",
-                                            Toast.LENGTH_SHORT
-                                    ).show();
-
-                                    if (listener != null) {
-
-                                        listener.onEventStatusChanged();
-
-                                    } else {
-
-                                        int adapterPosition =
-                                                holder.getAdapterPosition();
-
-                                        if (adapterPosition !=
-                                                RecyclerView.NO_POSITION) {
-
-                                            eventList.remove(
-                                                    adapterPosition
-                                            );
-
-                                            notifyItemRemoved(
-                                                    adapterPosition
-                                            );
-                                        }
-                                    }
-                                })
-                                .addOnFailureListener(e -> {
-
-                                    Toast.makeText(
-                                            context,
-                                            "Failed: "
-                                                    + e.getMessage(),
-                                            Toast.LENGTH_SHORT
-                                    ).show();
-                                });
-                    }
-            );
-
-            builder.setNegativeButton(
-                    "Cancel",
-                    (dialog, which) ->
-                            dialog.dismiss()
-            );
-
-            builder.show();
+            if (System.currentTimeMillis() - lastClickTime < 1000) return;
+            lastClickTime = System.currentTimeMillis();
+            if (listener != null) listener.onReject(event);
         });
 
-        // -----------------------------
-        // MARK EVENT AS COMPLETED
-        // -----------------------------
+        View.OnClickListener openDetailsListener = v -> {
+            Context itemCtx = context != null ? context : holder.itemView.getContext();
+            android.content.Intent intent = new android.content.Intent(itemCtx, com.example.eventhiveai.EventDetailsActivity.class);
+            intent.putExtra("EVENT_ID", event.getEventId());
+            intent.putExtra("USER_ROLE", userRole);
+            itemCtx.startActivity(intent);
+        };
 
-        holder.btnMarkCompleted.setOnClickListener(v -> {
-
-            new AlertDialog.Builder(context)
-                    .setTitle("Mark Event as Completed?")
-                    .setMessage(
-                            "Are you sure that \"" +
-                                    event.getEventName() +
-                                    "\" has been conducted successfully?"
-                    )
-                    .setPositiveButton(
-                            "Yes, Complete",
-                            (dialog, which) -> {
-
-                                FirebaseFirestore
-                                        .getInstance()
-                                        .collection("events")
-                                        .document(event.getEventId())
-                                        .update(
-                                                "status",
-                                                "completed"
-                                        )
-                                        .addOnSuccessListener(unused -> {
-
-                                            Toast.makeText(
-                                                    context,
-                                                    "Event marked as completed!",
-                                                    Toast.LENGTH_SHORT
-                                            ).show();
-
-                                            if (listener != null) {
-                                                listener.onEventStatusChanged();
-                                            }
-
-                                        })
-                                        .addOnFailureListener(e -> {
-
-                                            Toast.makeText(
-                                                    context,
-                                                    "Failed: "
-                                                            + e.getMessage(),
-                                                    Toast.LENGTH_LONG
-                                            ).show();
-                                        });
-                            }
-                    )
-                    .setNegativeButton(
-                            "Cancel",
-                            null
-                    )
-                    .show();
-        });
-
-        // -----------------------------
-        // CLICK EVENT
-        // -----------------------------
-
-        holder.itemView.setOnClickListener(v -> {
-
-            Intent intent =
-                    new Intent(
-                            context,
-                            EventDetailsActivity.class
-                    );
-
-            intent.putExtra(
-                    "EVENT_ID",
-                    event.getEventId()
-            );
-
-            intent.putExtra(
-                    "USER_ROLE",
-                    userRole
-            );
-
-            context.startActivity(intent);
-        });
+        if (holder.btnViewDetails != null) {
+            holder.btnViewDetails.setOnClickListener(openDetailsListener);
+        }
+        holder.itemView.setOnClickListener(openDetailsListener);
     }
 
     @Override
     public int getItemCount() {
-        return eventList.size();
+        return eventList != null ? eventList.size() : 0;
     }
 
-    // -----------------------------
-    // VIEW HOLDER
-    // -----------------------------
+    static class EventViewHolder extends RecyclerView.ViewHolder {
+        TextView tvTitle, tvClub, tvDateVenue, tvStatus, tvDepartment, tvBudget, tvCapacity, tvConflictBadge, tvSubmissionDate;
+        Button btnApprove, btnReject, btnViewDetails;
 
-    public static class EventViewHolder
-            extends RecyclerView.ViewHolder {
-
-        TextView tvEventName;
-        TextView tvClubName;
-        TextView tvEventDate;
-        TextView tvVenue;
-        TextView tvStatusBadge;
-
-        View layoutActionButtons;
-
-        Button btnApprove;
-        Button btnReject;
-        Button btnMarkCompleted;
-
-        public EventViewHolder(
-                @NonNull View itemView) {
-
+        public EventViewHolder(@NonNull View itemView) {
             super(itemView);
-
-            tvEventName =
-                    itemView.findViewById(
-                            R.id.tvEventName
-                    );
-
-            tvClubName =
-                    itemView.findViewById(
-                            R.id.tvClubName
-                    );
-
-            tvEventDate =
-                    itemView.findViewById(
-                            R.id.tvEventDate
-                    );
-
-            tvVenue =
-                    itemView.findViewById(
-                            R.id.tvVenue
-                    );
-
-            tvStatusBadge =
-                    itemView.findViewById(
-                            R.id.tvStatusBadge
-                    );
-
-            layoutActionButtons =
-                    itemView.findViewById(
-                            R.id.layoutActionButtons
-                    );
-
-            btnApprove =
-                    itemView.findViewById(
-                            R.id.btnApprove
-                    );
-
-            btnReject =
-                    itemView.findViewById(
-                            R.id.btnReject
-                    );
-
-            btnMarkCompleted =
-                    itemView.findViewById(
-                            R.id.btnMarkCompleted
-                    );
+            tvTitle = itemView.findViewById(R.id.tvEventTitle);
+            tvClub = itemView.findViewById(R.id.tvClubName);
+            tvDateVenue = itemView.findViewById(R.id.tvDateVenue);
+            tvStatus = itemView.findViewById(R.id.tvStatus);
+            tvDepartment = itemView.findViewById(R.id.tvDepartment);
+            tvBudget = itemView.findViewById(R.id.tvBudget);
+            tvCapacity = itemView.findViewById(R.id.tvCapacity);
+            tvConflictBadge = itemView.findViewById(R.id.tvConflictBadge);
+            tvSubmissionDate = itemView.findViewById(R.id.tvSubmissionDate);
+            btnApprove = itemView.findViewById(R.id.btnApprove);
+            btnReject = itemView.findViewById(R.id.btnReject);
+            btnViewDetails = itemView.findViewById(R.id.btnViewDetails);
         }
     }
 }

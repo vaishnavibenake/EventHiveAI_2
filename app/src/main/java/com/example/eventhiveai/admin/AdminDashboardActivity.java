@@ -2,85 +2,66 @@ package com.example.eventhiveai.admin;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.example.eventhiveai.LoginActivity;
-import com.example.eventhiveai.MainActivity;
 import com.example.eventhiveai.NotificationsActivity;
 import com.example.eventhiveai.R;
 import com.example.eventhiveai.SettingsActivity;
-import com.example.eventhiveai.utils.FirebaseDataHelper;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.QuerySnapshot;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class AdminDashboardActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
+    private ImageButton btnMenu, btnNotifications;
+    private TextView tvTotalEvents, tvActiveClubs, tvPendingEvents, tvVenueConflicts;
 
-    private View btnMenu;
-    private View btnNotifications;
-    private View btnCreateEvent;
-    private View btnViewPending;
-    private View btnManageEvents;
-    private View btnManageClubs;
-    private View btnManageUsers;
-    private View quickCalendar;
-    private View btnViewReports;
+    private Button btnCreateEvent, btnViewPending;
+    private Button btnManageEvents, btnManageClubs, btnManageUsers, quickCalendar, btnViewReports;
 
-    private View menuDashboard;
-    private View menuEvents;
-    private View menuClubs;
-    private View menuUsers;
-    private View menuCalendar;
-    private View menuReports;
-    private View menuNotifications;
-    private View menuSettings;
-    private View menuLogout;
-
-    private TextView tvWelcome;
-    private TextView tvTotalEvents;
-    private TextView tvActiveClubs;
-    private TextView tvPendingEvents;
-    private TextView tvVenueConflicts;
+    // Custom Drawer Menu Items
+    private View menuDashboard, menuCalendar, menuClubs, menuEvents, menuUsers;
+    private View menuReports, menuNotifications, menuSettings, menuLogout;
 
     private FirebaseFirestore db;
-    private FirebaseAuth auth;
+    private ListenerRegistration eventsListener, clubsListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_dashboard);
 
-        auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
         initializeViews();
-        setupHamburger();
-        setupDashboardButtons();
-        setupDrawerMenu();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        loadDashboardData();
+        setupListeners();
     }
 
     private void initializeViews() {
         drawerLayout = findViewById(R.id.drawerLayout);
-
         btnMenu = findViewById(R.id.btnMenu);
         btnNotifications = findViewById(R.id.btnNotifications);
+
+        tvTotalEvents = findViewById(R.id.tvTotalEvents);
+        tvActiveClubs = findViewById(R.id.tvActiveClubs);
+        tvPendingEvents = findViewById(R.id.tvPendingEvents);
+        tvVenueConflicts = findViewById(R.id.tvVenueConflicts);
 
         btnCreateEvent = findViewById(R.id.btnCreateEvent);
         btnViewPending = findViewById(R.id.btnViewPending);
@@ -91,193 +72,281 @@ public class AdminDashboardActivity extends AppCompatActivity {
         quickCalendar = findViewById(R.id.quickCalendar);
         btnViewReports = findViewById(R.id.btnViewReports);
 
-        tvWelcome = findViewById(R.id.tvWelcome);
-        tvTotalEvents = findViewById(R.id.tvTotalEvents);
-        tvActiveClubs = findViewById(R.id.tvActiveClubs);
-        tvPendingEvents = findViewById(R.id.tvPendingEvents);
-        tvVenueConflicts = findViewById(R.id.tvVenueConflicts);
-
+        // Navigation Drawer items
         menuDashboard = findViewById(R.id.menuDashboard);
-        menuEvents = findViewById(R.id.menuEvents);
-        menuClubs = findViewById(R.id.menuClubs);
-        menuUsers = findViewById(R.id.menuUsers);
         menuCalendar = findViewById(R.id.menuCalendar);
+        menuClubs = findViewById(R.id.menuClubs);
+        menuEvents = findViewById(R.id.menuEvents);
+        menuUsers = findViewById(R.id.menuUsers);
         menuReports = findViewById(R.id.menuReports);
         menuNotifications = findViewById(R.id.menuNotifications);
         menuSettings = findViewById(R.id.menuSettings);
         menuLogout = findViewById(R.id.menuLogout);
     }
 
-    private void setupHamburger() {
-        btnMenu.setOnClickListener(v -> {
-            if (drawerLayout.isDrawerOpen(Gravity.LEFT)) {
-                drawerLayout.closeDrawer(Gravity.LEFT);
-            } else {
-                drawerLayout.openDrawer(Gravity.LEFT);
-            }
-        });
-
-        btnNotifications.setOnClickListener(v -> {
-            Intent intent = new Intent(AdminDashboardActivity.this, NotificationsActivity.class);
-            intent.putExtra("USER_ROLE", "ADMIN");
-            startActivity(intent);
-        });
-    }
-
-    private void setupDashboardButtons() {
-        btnCreateEvent.setOnClickListener(v -> {
-            Intent intent = new Intent(AdminDashboardActivity.this, ManageEventsActivity.class);
-            startActivity(intent);
-        });
-
-        btnViewPending.setOnClickListener(v -> {
-            Intent intent = new Intent(AdminDashboardActivity.this, ManageEventsActivity.class);
-            startActivity(intent);
-        });
-
-        btnManageEvents.setOnClickListener(v -> {
-            Intent intent = new Intent(AdminDashboardActivity.this, ManageEventsActivity.class);
-            startActivity(intent);
-        });
-
-        btnManageClubs.setOnClickListener(v -> {
-            Intent intent = new Intent(AdminDashboardActivity.this, ManageClubsActivity.class);
-            startActivity(intent);
-        });
-
-        btnManageUsers.setOnClickListener(v -> {
-            Intent intent = new Intent(AdminDashboardActivity.this, ManageUsersActivity.class);
-            startActivity(intent);
-        });
-
-        quickCalendar.setOnClickListener(v -> {
-            Intent intent = new Intent(AdminDashboardActivity.this, AdminCalendarActivity.class);
-            intent.putExtra("USER_ROLE", "ADMIN");
-            startActivity(intent);
-        });
-
-        if (btnViewReports != null) {
-            btnViewReports.setOnClickListener(v -> {
-                Intent intent = new Intent(AdminDashboardActivity.this, AdminReportsActivity.class);
-                startActivity(intent);
+    private void setupListeners() {
+        if (btnMenu != null) {
+            btnMenu.setOnClickListener(v -> {
+                if (drawerLayout != null) {
+                    if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                        drawerLayout.closeDrawer(GravityCompat.START);
+                    } else {
+                        drawerLayout.openDrawer(GravityCompat.START);
+                    }
+                }
             });
         }
-    }
 
-    private void setupDrawerMenu() {
-        menuDashboard.setOnClickListener(v -> drawerLayout.closeDrawer(Gravity.LEFT));
+        if (btnNotifications != null) {
+            btnNotifications.setOnClickListener(v -> openActivity(NotificationsActivity.class));
+        }
 
-        menuEvents.setOnClickListener(v -> {
-            drawerLayout.closeDrawer(Gravity.LEFT);
-            startActivity(new Intent(AdminDashboardActivity.this, ManageEventsActivity.class));
-        });
+        if (btnCreateEvent != null) {
+            btnCreateEvent.setOnClickListener(v -> openActivity(ManageEventsActivity.class));
+        }
 
-        menuClubs.setOnClickListener(v -> {
-            drawerLayout.closeDrawer(Gravity.LEFT);
-            startActivity(new Intent(AdminDashboardActivity.this, ManageClubsActivity.class));
-        });
+        if (btnViewPending != null) {
+            btnViewPending.setOnClickListener(v -> openActivity(ManageEventsActivity.class));
+        }
 
-        menuUsers.setOnClickListener(v -> {
-            drawerLayout.closeDrawer(Gravity.LEFT);
-            startActivity(new Intent(AdminDashboardActivity.this, ManageUsersActivity.class));
-        });
+        if (btnManageEvents != null) {
+            btnManageEvents.setOnClickListener(v -> openActivity(ManageEventsActivity.class));
+        }
 
-        menuCalendar.setOnClickListener(v -> {
-            drawerLayout.closeDrawer(Gravity.LEFT);
-            Intent intent = new Intent(AdminDashboardActivity.this, AdminCalendarActivity.class);
-            intent.putExtra("USER_ROLE", "ADMIN");
-            startActivity(intent);
-        });
+        if (btnManageClubs != null) {
+            btnManageClubs.setOnClickListener(v -> openActivity(ManageClubsActivity.class));
+        }
+
+        if (btnManageUsers != null) {
+            btnManageUsers.setOnClickListener(v -> openActivity(ManageUsersActivity.class));
+        }
+
+        if (quickCalendar != null) {
+            quickCalendar.setOnClickListener(v -> openActivity(AdminCalendarActivity.class));
+        }
+
+        if (btnViewReports != null) {
+            btnViewReports.setOnClickListener(v -> openActivity(AdminReportsActivity.class));
+        }
+
+        if (tvTotalEvents != null) {
+            tvTotalEvents.setOnClickListener(v -> openActivity(ManageEventsActivity.class));
+        }
+
+        if (tvActiveClubs != null) {
+            tvActiveClubs.setOnClickListener(v -> openActivity(ManageClubsActivity.class));
+        }
+
+        if (tvPendingEvents != null) {
+            tvPendingEvents.setOnClickListener(v -> openActivity(ManageEventsActivity.class));
+        }
+
+        if (tvVenueConflicts != null) {
+            tvVenueConflicts.setOnClickListener(v -> {
+                Toast.makeText(this, "Reviewing events for schedule & venue clashes.", Toast.LENGTH_SHORT).show();
+                openActivity(ManageEventsActivity.class);
+            });
+        }
+
+        // Drawer navigation items
+        if (menuDashboard != null) {
+            menuDashboard.setOnClickListener(v -> closeDrawer());
+        }
+
+        if (menuCalendar != null) {
+            menuCalendar.setOnClickListener(v -> {
+                closeDrawer();
+                openActivity(AdminCalendarActivity.class);
+            });
+        }
+
+        if (menuClubs != null) {
+            menuClubs.setOnClickListener(v -> {
+                closeDrawer();
+                openActivity(ManageClubsActivity.class);
+            });
+        }
+
+        if (menuEvents != null) {
+            menuEvents.setOnClickListener(v -> {
+                closeDrawer();
+                openActivity(ManageEventsActivity.class);
+            });
+        }
+
+        if (menuUsers != null) {
+            menuUsers.setOnClickListener(v -> {
+                closeDrawer();
+                openActivity(ManageUsersActivity.class);
+            });
+        }
 
         if (menuReports != null) {
             menuReports.setOnClickListener(v -> {
-                drawerLayout.closeDrawer(Gravity.LEFT);
-                startActivity(new Intent(AdminDashboardActivity.this, AdminReportsActivity.class));
+                closeDrawer();
+                openActivity(AdminReportsActivity.class);
             });
         }
 
         if (menuNotifications != null) {
             menuNotifications.setOnClickListener(v -> {
-                drawerLayout.closeDrawer(Gravity.LEFT);
-                Intent intent = new Intent(AdminDashboardActivity.this, NotificationsActivity.class);
-                intent.putExtra("USER_ROLE", "ADMIN");
-                startActivity(intent);
+                closeDrawer();
+                openActivity(NotificationsActivity.class);
             });
         }
 
-        menuSettings.setOnClickListener(v -> {
-            drawerLayout.closeDrawer(Gravity.LEFT);
-            Intent intent = new Intent(AdminDashboardActivity.this, SettingsActivity.class);
-            intent.putExtra("USER_ROLE", "ADMIN");
-            startActivity(intent);
-        });
+        if (menuSettings != null) {
+            menuSettings.setOnClickListener(v -> {
+                closeDrawer();
+                openActivity(SettingsActivity.class);
+            });
+        }
 
-        menuLogout.setOnClickListener(v -> {
-            drawerLayout.closeDrawer(Gravity.LEFT);
-            auth.signOut();
-            Toast.makeText(AdminDashboardActivity.this, "Logged out successfully", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(AdminDashboardActivity.this, MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
-        });
+        if (menuLogout != null) {
+            menuLogout.setOnClickListener(v -> {
+                closeDrawer();
+                FirebaseAuth.getInstance().signOut();
+                Toast.makeText(AdminDashboardActivity.this, "Logged out successfully", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(AdminDashboardActivity.this, LoginActivity.class);
+                intent.putExtra("USER_ROLE", "ADMIN");
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            });
+        }
     }
 
-    private void loadDashboardData() {
-        // Fetch events for total, pending, and venue conflict calculation
-        db.collection("events").get()
-                .addOnSuccessListener(snapshot -> {
-                    int totalEvents = snapshot.size();
-                    int pendingEvents = 0;
-                    List<EventModel> allEvents = new ArrayList<>();
+    private void closeDrawer() {
+        if (drawerLayout != null && drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        }
+    }
 
-                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
-                        EventModel event = doc.toObject(EventModel.class);
-                        if (event == null) event = new EventModel();
-                        event.setEventId(doc.getId());
-                        if (doc.contains("eventName")) event.setEventName(doc.getString("eventName"));
-                        if (doc.contains("date")) event.setDate(doc.getString("date"));
-                        if (doc.contains("venue")) event.setVenue(doc.getString("venue"));
-                        if (doc.contains("status")) event.setStatus(doc.getString("status"));
-                        allEvents.add(event);
+    private void openActivity(Class<?> cls) {
+        Intent intent = new Intent(this, cls);
+        intent.putExtra("USER_ROLE", "ADMIN");
+        startActivity(intent);
+    }
 
-                        String status = doc.getString("status");
-                        if (status != null && status.equalsIgnoreCase("pending")) {
-                            pendingEvents++;
+    @Override
+    protected void onStart() {
+        super.onStart();
+        attachFirestoreListeners();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (eventsListener != null) eventsListener.remove();
+        if (clubsListener != null) clubsListener.remove();
+    }
+
+    private void attachFirestoreListeners() {
+        // Real-time Active Clubs counter
+        clubsListener = db.collection("clubs")
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(QuerySnapshot value, FirebaseFirestoreException error) {
+                        if (error != null) {
+                            if (tvActiveClubs != null) tvActiveClubs.setText("0");
+                            return;
+                        }
+                        if (value != null) {
+                            int activeCount = 0;
+                            for (DocumentSnapshot doc : value.getDocuments()) {
+                                String status = doc.getString("status");
+                                if (status != null && status.equalsIgnoreCase("active")) {
+                                    activeCount++;
+                                }
+                            }
+                            if (tvActiveClubs != null) tvActiveClubs.setText(String.valueOf(activeCount));
                         }
                     }
+                });
 
-                    tvTotalEvents.setText(String.valueOf(totalEvents));
-                    tvPendingEvents.setText(String.valueOf(pendingEvents));
+        // Real-time Total Events, Pending Approvals & Venue Conflicts
+        eventsListener = db.collection("events")
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(QuerySnapshot value, FirebaseFirestoreException error) {
+                        if (error != null) {
+                            if (tvTotalEvents != null) tvTotalEvents.setText("0");
+                            if (tvPendingEvents != null) tvPendingEvents.setText("0");
+                            if (tvVenueConflicts != null) tvVenueConflicts.setText("0");
+                            return;
+                        }
 
-                    // Real venue conflict detection:
-                    int conflicts = FirebaseDataHelper.countVenueConflicts(allEvents);
-                    if (tvVenueConflicts != null) {
-                        tvVenueConflicts.setText(String.valueOf(conflicts));
+                        if (value != null) {
+                            List<DocumentSnapshot> docs = value.getDocuments();
+                            int totalEvents = docs.size();
+                            int pendingEvents = 0;
+
+                            for (DocumentSnapshot doc : docs) {
+                                String status = doc.getString("status");
+                                if (status != null && status.equalsIgnoreCase("pending")) {
+                                    pendingEvents++;
+                                }
+                            }
+
+                            if (tvTotalEvents != null) tvTotalEvents.setText(String.valueOf(totalEvents));
+                            if (tvPendingEvents != null) tvPendingEvents.setText(String.valueOf(pendingEvents));
+
+                            int conflicts = calculateVenueConflicts(docs);
+                            if (tvVenueConflicts != null) tvVenueConflicts.setText(String.valueOf(conflicts));
+                        }
                     }
-                })
-                .addOnFailureListener(e -> {
-                    tvTotalEvents.setText("0");
-                    tvPendingEvents.setText("0");
-                    if (tvVenueConflicts != null) tvVenueConflicts.setText("0");
                 });
+    }
 
-        // Fetch active clubs count
-        db.collection("clubs")
-                .whereEqualTo("status", "active")
-                .get()
-                .addOnSuccessListener(snapshot -> {
-                    tvActiveClubs.setText(String.valueOf(snapshot.size()));
-                })
-                .addOnFailureListener(e -> {
-                    tvActiveClubs.setText("0");
-                });
+    private int calculateVenueConflicts(List<DocumentSnapshot> docs) {
+        int conflictCount = 0;
+        int n = docs.size();
+
+        for (int i = 0; i < n; i++) {
+            DocumentSnapshot docA = docs.get(i);
+            String statusA = docA.getString("status");
+            if (statusA != null && (statusA.equalsIgnoreCase("rejected") || statusA.equalsIgnoreCase("cancelled"))) continue;
+
+            String dateA = docA.getString("date");
+            String venueA = docA.getString("venue");
+            String startTimeA = docA.getString("startTime");
+            String endTimeA = docA.getString("endTime");
+
+            if (dateA == null || venueA == null || dateA.trim().isEmpty() || venueA.trim().isEmpty()) continue;
+
+            for (int j = i + 1; j < n; j++) {
+                DocumentSnapshot docB = docs.get(j);
+                String statusB = docB.getString("status");
+                if (statusB != null && (statusB.equalsIgnoreCase("rejected") || statusB.equalsIgnoreCase("cancelled"))) continue;
+
+                String dateB = docB.getString("date");
+                String venueB = docB.getString("venue");
+                String startTimeB = docB.getString("startTime");
+                String endTimeB = docB.getString("endTime");
+
+                if (dateB == null || venueB == null || dateB.trim().isEmpty() || venueB.trim().isEmpty()) continue;
+
+                if (dateA.trim().equalsIgnoreCase(dateB.trim()) && venueA.trim().equalsIgnoreCase(venueB.trim())) {
+                    // Check if time intervals overlap or identical
+                    if (startTimeA != null && startTimeB != null && !startTimeA.trim().isEmpty() && !startTimeB.trim().isEmpty()) {
+                        if (startTimeA.trim().equalsIgnoreCase(startTimeB.trim())) {
+                            conflictCount++;
+                        } else {
+                            conflictCount++;
+                        }
+                    } else {
+                        conflictCount++;
+                    }
+                }
+            }
+        }
+        return conflictCount;
     }
 
     @Override
     public void onBackPressed() {
-        if (drawerLayout.isDrawerOpen(Gravity.LEFT)) {
-            drawerLayout.closeDrawer(Gravity.LEFT);
+        if (drawerLayout != null && drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
         }

@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/cardBg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Register Club Coordinator"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Assign credentials and club governance role"
+            android:textColor="?attr/customTextColorSecondary"
+            android:textSize="12sp" />
+
+        <!-- Full Name -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Coordinator Full Name *"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etCoordName"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/input_background"
+            android:hint="e.g. Prof. Rohit Sharma"
+            android:inputType="textPersonName"
+            android:paddingHorizontal="14dp"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textColorHint="?attr/customTextColorSecondary"
+            android:textSize="14sp" />
+
+        <!-- Assigned Club Dropdown -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Assigned Club *"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinnerClubs"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/input_background"
+            android:paddingHorizontal="14dp" />
+
+        <!-- Department -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Department"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etCoordDepartment"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/input_background"
+            android:hint="e.g. Computer Science &amp; Engg."
+            android:inputType="textCapWords"
+            android:paddingHorizontal="14dp"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textColorHint="?attr/customTextColorSecondary"
+            android:textSize="14sp" />
+
+        <!-- Contact Phone -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Contact Number"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etCoordPhone"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/input_background"
+            android:hint="e.g. +91 9876543210"
+            android:inputType="phone"
+            android:paddingHorizontal="14dp"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textColorHint="?attr/customTextColorSecondary"
+            android:textSize="14sp" />
+
+        <!-- Email Address -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Coordinator Email / Username *"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etCoordEmail"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/input_background"
+            android:hint="coordinator@eventhive.ai"
+            android:inputType="textEmailAddress"
+            android:paddingHorizontal="14dp"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textColorHint="?attr/customTextColorSecondary"
+            android:textSize="14sp" />
+
+        <!-- Password -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Assigned Password *"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etCoordPassword"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/input_background"
+            android:hint="Minimum 6 characters"
+            android:inputType="textPassword"
+            android:paddingHorizontal="14dp"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textColorHint="?attr/customTextColorSecondary"
+            android:textSize="14sp" />
+
+        <!-- Confirm Password -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Confirm Password *"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etCoordConfirmPassword"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/input_background"
+            android:hint="Re-type password"
+            android:inputType="textPassword"
+            android:paddingHorizontal="14dp"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textColorHint="?attr/customTextColorSecondary"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+</ScrollView>
