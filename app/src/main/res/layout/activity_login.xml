@@ -59,12 +59,57 @@
             android:textColor="#64748B"
             android:textSize="14sp" />
 
+        <!-- Role Selector Tabs -->
+        <LinearLayout
+            android:id="@+id/roleSelectorLayout"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:layout_marginTop="20dp"
+            android:background="#171A27"
+            android:orientation="horizontal"
+            android:padding="3dp">
+
+            <Button
+                android:id="@+id/btnRoleStudent"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="Student"
+                android:textSize="12sp"
+                android:textAllCaps="false"
+                android:backgroundTint="#8B5CF6"
+                android:textColor="#FFFFFF" />
+
+            <Button
+                android:id="@+id/btnRoleCoordinator"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="Coordinator"
+                android:textSize="12sp"
+                android:textAllCaps="false"
+                android:backgroundTint="#00000000"
+                android:textColor="#94A3B8" />
+
+            <Button
+                android:id="@+id/btnRoleAdmin"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="Admin"
+                android:textSize="12sp"
+                android:textAllCaps="false"
+                android:backgroundTint="#00000000"
+                android:textColor="#94A3B8" />
+
+        </LinearLayout>
+
         <!-- Username Label -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="35dp"
-            android:text="Username"
+            android:layout_marginTop="20dp"
+            android:text="Username / Email"
             android:textColor="#CBD5E1"
             android:textSize="14sp"
             android:textStyle="bold" />
@@ -148,18 +193,36 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Default Demo Credentials:"
+                android:text="Default Demo Credentials (Tap to Auto-fill):"
                 android:textColor="#CBD5E1"
                 android:textSize="12sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:layout_width="wrap_content"
+                android:id="@+id/tvDemoAdmin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="?attr/selectableItemBackground"
+                android:paddingVertical="4dp"
+                android:text="👉 Admin: admin@eventhive.ai / admin@123"
+                android:textColor="#A78BFA"
+                android:textSize="12sp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/tvDemoCoordinator"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Admin: admin@eventhive.ai / admin@123\nCoordinator: coordinator@eventhive.ai / coord@123"
-                android:textColor="#94A3B8"
-                android:textSize="11sp" />
+                android:background="?attr/selectableItemBackground"
+                android:paddingVertical="4dp"
+                android:text="👉 Coordinator: coordinator@eventhive.ai / coord@123"
+                android:textColor="#A78BFA"
+                android:textSize="12sp"
+                android:clickable="true"
+                android:focusable="true" />
         </LinearLayout>
 
     </LinearLayout>
