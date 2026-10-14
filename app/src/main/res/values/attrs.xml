@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="appBg" format="color|reference" />
+    <attr name="topBarBg" format="color|reference" />
+    <attr name="cardBg" format="color|reference" />
+    <attr name="customTextColorPrimary" format="color|reference" />
+    <attr name="customTextColorSecondary" format="color|reference" />
+    <attr name="customDivider" format="color|reference" />
+</resources>

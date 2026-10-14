@@ -13,29 +13,32 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.eventhiveai.R;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class AdminCalendarActivity extends AppCompatActivity {
 
     private ImageButton btnBack;
     private CalendarView calendarView;
-    private TextView tvSelectedDateTitle;
-    private RecyclerView recyclerCalendarEvents;
+    private RecyclerView rvCalendarEvents;
+    private TextView tvSelectedDate, tvEmptyState;
     private ProgressBar progressBar;
-    private TextView tvEmptyCalendar;
 
-    private ArrayList<EventModel> dateEvents;
-    private EventAdapter eventAdapter;
     private FirebaseFirestore db;
+    private EventAdapter eventAdapter;
+    private List<EventModel> allActiveEvents = new ArrayList<>();
+    private List<EventModel> selectedDateEvents = new ArrayList<>();
+    private String selectedDateStandard = "";
 
-    private String selectedDateStr = "";
-    private String userRole = "ADMIN";
+    private final SimpleDateFormat stdSdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,86 +47,116 @@ public class AdminCalendarActivity extends AppCompatActivity {
 
         db = FirebaseFirestore.getInstance();
 
-        String roleExtra = getIntent().getStringExtra("USER_ROLE");
-        if (roleExtra != null) userRole = roleExtra;
-
         btnBack = findViewById(R.id.btnBack);
         calendarView = findViewById(R.id.calendarView);
-        tvSelectedDateTitle = findViewById(R.id.tvSelectedDateTitle);
-        recyclerCalendarEvents = findViewById(R.id.recyclerCalendarEvents);
+        rvCalendarEvents = findViewById(R.id.rvCalendarEvents);
+        tvSelectedDate = findViewById(R.id.tvSelectedDate);
+        tvEmptyState = findViewById(R.id.tvEmptyState);
         progressBar = findViewById(R.id.progressBar);
-        tvEmptyCalendar = findViewById(R.id.tvEmptyCalendar);
 
-        recyclerCalendarEvents.setLayoutManager(new LinearLayoutManager(this));
-        dateEvents = new ArrayList<>();
-        eventAdapter = new EventAdapter(dateEvents, userRole, false, null);
-        recyclerCalendarEvents.setAdapter(eventAdapter);
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
 
-        btnBack.setOnClickListener(v -> finish());
+        rvCalendarEvents.setLayoutManager(new LinearLayoutManager(this));
+        eventAdapter = new EventAdapter(this, selectedDateEvents, null);
+        rvCalendarEvents.setAdapter(eventAdapter);
 
-        // Default to today
-        Calendar today = Calendar.getInstance();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        selectedDateStr = sdf.format(today.getTime());
-        tvSelectedDateTitle.setText("Events on: " + selectedDateStr);
+        Calendar calendar = Calendar.getInstance();
+        selectedDateStandard = stdSdf.format(calendar.getTime());
+        if (tvSelectedDate != null) {
+            tvSelectedDate.setText("Events for: " + selectedDateStandard);
+        }
 
         calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
-            // Month is 0-indexed
             Calendar cal = Calendar.getInstance();
             cal.set(year, month, dayOfMonth);
-            selectedDateStr = sdf.format(cal.getTime());
-            tvSelectedDateTitle.setText("Events on: " + selectedDateStr);
-            loadEventsForDate(selectedDateStr);
+            selectedDateStandard = stdSdf.format(cal.getTime());
+
+            if (tvSelectedDate != null) {
+                tvSelectedDate.setText("Events for: " + selectedDateStandard);
+            }
+            filterEventsForDate(selectedDateStandard);
         });
 
-        loadEventsForDate(selectedDateStr);
+        loadAllApprovedAndActiveEvents();
     }
 
-    private void loadEventsForDate(String dateStr) {
-        progressBar.setVisibility(View.VISIBLE);
-        tvEmptyCalendar.setVisibility(View.GONE);
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadAllApprovedAndActiveEvents();
+    }
 
-        db.collection("events")
-                .whereEqualTo("status", "approved")
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    progressBar.setVisibility(View.GONE);
-                    dateEvents.clear();
+    private void loadAllApprovedAndActiveEvents() {
+        if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
+        if (tvEmptyState != null) tvEmptyState.setVisibility(View.GONE);
 
-                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        String eventDate = doc.getString("date");
-
-                        // Check if event date matches
-                        if (eventDate != null && isMatchingDate(eventDate, dateStr)) {
+        db.collection("events").get()
+                .addOnCompleteListener(task -> {
+                    if (progressBar != null) progressBar.setVisibility(View.GONE);
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        allActiveEvents.clear();
+                        for (DocumentSnapshot doc : task.getResult().getDocuments()) {
                             EventModel event = doc.toObject(EventModel.class);
                             if (event == null) event = new EventModel();
                             event.setEventId(doc.getId());
-                            if (doc.contains("eventName")) event.setEventName(doc.getString("eventName"));
-                            if (doc.contains("clubName")) event.setClubName(doc.getString("clubName"));
-                            if (doc.contains("date")) event.setDate(doc.getString("date"));
-                            if (doc.contains("venue")) event.setVenue(doc.getString("venue"));
-                            if (doc.contains("status")) event.setStatus(doc.getString("status"));
 
-                            dateEvents.add(event);
+                            String status = doc.getString("status");
+                            if (status != null) {
+                                status = status.trim().toLowerCase();
+                                event.setStatus(status);
+                                // Include approved, active, and completed events on the calendar
+                                if ("approved".equals(status) || "active".equals(status) || "completed".equals(status)) {
+                                    allActiveEvents.add(event);
+                                }
+                            }
                         }
+                        filterEventsForDate(selectedDateStandard);
+                    } else {
+                        Toast.makeText(this, "Failed to load calendar events.", Toast.LENGTH_SHORT).show();
                     }
-
-                    eventAdapter.notifyDataSetChanged();
-                    if (dateEvents.isEmpty()) {
-                        tvEmptyCalendar.setVisibility(View.VISIBLE);
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    progressBar.setVisibility(View.GONE);
-                    Toast.makeText(AdminCalendarActivity.this, "Failed to load events: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
-    private boolean isMatchingDate(String eventDate, String targetDate) {
-        if (eventDate.equalsIgnoreCase(targetDate)) return true;
-        // Also support DD-MM-YYYY vs YYYY-MM-DD
-        String cleanEvent = eventDate.replace("/", "-").trim();
-        String cleanTarget = targetDate.replace("/", "-").trim();
-        return cleanEvent.equals(cleanTarget);
+    private void filterEventsForDate(String targetDateStd) {
+        selectedDateEvents.clear();
+
+        for (EventModel event : allActiveEvents) {
+            String rawDate = event.getDate();
+            if (rawDate == null || rawDate.trim().isEmpty()) continue;
+
+            String normalized = normalizeDate(rawDate.trim());
+            if (targetDateStd.equals(normalized)) {
+                selectedDateEvents.add(event);
+            }
+        }
+
+        eventAdapter.notifyDataSetChanged();
+
+        if (selectedDateEvents.isEmpty() && tvEmptyState != null) {
+            tvEmptyState.setText("No approved or active events scheduled on " + targetDateStd);
+            tvEmptyState.setVisibility(View.VISIBLE);
+        } else if (tvEmptyState != null) {
+            tvEmptyState.setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * Normalizes various date formats (e.g. yyyy-MM-dd, yyyy-M-d, dd-MM-yyyy) into standard yyyy-MM-dd
+     */
+    private String normalizeDate(String input) {
+        String[] possibleFormats = {"yyyy-MM-dd", "yyyy-M-d", "dd-MM-yyyy", "d-M-yyyy", "yyyy/MM/dd", "dd/MM/yyyy"};
+        for (String fmt : possibleFormats) {
+            try {
+                SimpleDateFormat parser = new SimpleDateFormat(fmt, Locale.getDefault());
+                parser.setLenient(false);
+                Date parsed = parser.parse(input);
+                if (parsed != null) {
+                    return stdSdf.format(parsed);
+                }
+            } catch (ParseException ignored) {}
+        }
+        return input;
     }
 }

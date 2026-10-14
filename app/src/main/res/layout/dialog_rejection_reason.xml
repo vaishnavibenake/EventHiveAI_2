@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select reason for proposal rejection:"
+        android:textColor="#333333"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <RadioGroup
+        android:id="@+id/rgPredefinedReasons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp">
+
+        <RadioButton
+            android:id="@+id/rbVenueConflict"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Venue conflict / double-booked" />
+
+        <RadioButton
+            android:id="@+id/rbBudgetIssue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Budget allocation unverified or exceeds quota" />
+
+        <RadioButton
+            android:id="@+id/rbIncompleteInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Incomplete event description or timing details" />
+
+        <RadioButton
+            android:id="@+id/rbDuplicateEvent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Duplicate event proposal already scheduled" />
+
+        <RadioButton
+            android:id="@+id/rbOtherReason"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Other (specify below)" />
+
+    </RadioGroup>
+
+    <EditText
+        android:id="@+id/etReason"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:hint="Provide detailed feedback for coordinator..."
+        android:inputType="textMultiLine"
+        android:lines="3"
+        android:gravity="top" />
+
+</LinearLayout>

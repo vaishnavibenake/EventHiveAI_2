@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/cardBg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Edit Coordinator Profile"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvEditCoordEmail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Email: coordinator@eventhive.ai"
+            android:textColor="?attr/customTextColorSecondary"
+            android:textSize="13sp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"
+            android:background="?attr/customDivider" />
+
+        <!-- Full Name -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Coordinator Full Name *"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etEditCoordName"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/input_background"
+            android:hint="Full Name"
+            android:inputType="textPersonName"
+            android:paddingHorizontal="14dp"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textColorHint="?attr/customTextColorSecondary"
+            android:textSize="14sp" />
+
+        <!-- Assigned Club Dropdown -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Assigned Club *"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinnerEditClubs"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/input_background"
+            android:paddingHorizontal="14dp" />
+
+        <!-- Department -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Department"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etEditCoordDepartment"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/input_background"
+            android:hint="Department (e.g. CSE)"
+            android:inputType="textCapWords"
+            android:paddingHorizontal="14dp"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textColorHint="?attr/customTextColorSecondary"
+            android:textSize="14sp" />
+
+        <!-- Contact Phone -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Contact Number"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etEditCoordPhone"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/input_background"
+            android:hint="Contact Number"
+            android:inputType="phone"
+            android:paddingHorizontal="14dp"
+            android:textColor="?attr/customTextColorPrimary"
+            android:textColorHint="?attr/customTextColorSecondary"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+</ScrollView>

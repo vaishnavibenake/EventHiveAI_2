@@ -22,12 +22,9 @@ public class EventModel {
     private String coordinatorId;
     private String status; // "pending", "approved", "rejected", "completed", "cancelled"
     private String rejectionReason;
-
-    // Participation settings
-    private String participationType; // "Individual", "Pair", "Team"
-    private int minTeamSize;
-    private int maxTeamSize;
-    private int currentParticipants; // tracks current registration count
+    private String participationType = "Individual";
+    private int minTeamSize = 1;
+    private int maxTeamSize = 1;
 
     @ServerTimestamp
     private Date createdAt;
@@ -210,14 +207,6 @@ public class EventModel {
         this.rejectionReason = rejectionReason;
     }
 
-    public Date getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
-    }
-
     public String getParticipationType() {
         return participationType != null ? participationType : "Individual";
     }
@@ -242,11 +231,11 @@ public class EventModel {
         this.maxTeamSize = maxTeamSize;
     }
 
-    public int getCurrentParticipants() {
-        return currentParticipants;
+    public Date getCreatedAt() {
+        return createdAt;
     }
 
-    public void setCurrentParticipants(int currentParticipants) {
-        this.currentParticipants = currentParticipants;
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
     }
 }
