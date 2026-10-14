@@ -1,5 +1,6 @@
 package com.example.eventhiveai;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,9 +17,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.eventhiveai.models.NotificationModel;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
 
@@ -28,6 +29,7 @@ public class NotificationsActivity extends AppCompatActivity {
     private RecyclerView recyclerNotifications;
     private ProgressBar progressBar;
     private LinearLayout emptyView;
+    private TextView tvEmptyMessage;
 
     private ArrayList<NotificationModel> notificationList;
     private NotificationAdapter adapter;
@@ -50,6 +52,7 @@ public class NotificationsActivity extends AppCompatActivity {
         recyclerNotifications = findViewById(R.id.recyclerNotifications);
         progressBar = findViewById(R.id.progressBar);
         emptyView = findViewById(R.id.emptyView);
+        tvEmptyMessage = findViewById(R.id.tvEmptyMessage);
 
         recyclerNotifications.setLayoutManager(new LinearLayoutManager(this));
         notificationList = new ArrayList<>();
@@ -57,11 +60,33 @@ public class NotificationsActivity extends AppCompatActivity {
         recyclerNotifications.setAdapter(adapter);
 
         btnBack.setOnClickListener(v -> finish());
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
         loadNotifications();
     }
 
     private void loadNotifications() {
+        SharedPreferences prefs = getSharedPreferences("eventhive_settings", MODE_PRIVATE);
+        boolean notifEnabled = prefs.getBoolean("pref_notifications_enabled", true);
+
+        if (!notifEnabled) {
+            progressBar.setVisibility(View.GONE);
+            notificationList.clear();
+            adapter.notifyDataSetChanged();
+            if (tvEmptyMessage != null) {
+                tvEmptyMessage.setText("Notifications are muted in Settings.");
+            }
+            emptyView.setVisibility(View.VISIBLE);
+            return;
+        }
+
+        if (tvEmptyMessage != null) {
+            tvEmptyMessage.setText("No new announcements or alerts.");
+        }
+
         progressBar.setVisibility(View.VISIBLE);
         emptyView.setVisibility(View.GONE);
 

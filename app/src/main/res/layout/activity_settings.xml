@@ -127,6 +127,122 @@
 
             </LinearLayout>
 
+            <Button
+                android:id="@+id/btnEditProfile"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="#2E1065"
+                android:text="✏️  Edit Profile (Name &amp; Department)"
+                android:textAllCaps="false"
+                android:textColor="#A78BFA"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- APP APPEARANCE PREFERENCE CARD -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="#171A27"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🎨 App Appearance"
+                android:textColor="#F8FAFC"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Choose your preferred theme style for EventHive AI:"
+                android:textColor="#94A3B8"
+                android:textSize="12sp" />
+
+            <RadioGroup
+                android:id="@+id/rgThemeOptions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/rbThemeDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Dark Mode 🌙 (Recommended)"
+                    android:textColor="#E2E8F0"
+                    android:textSize="13sp" />
+
+                <RadioButton
+                    android:id="@+id/rbThemeLight"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Light Mode ☀️"
+                    android:textColor="#E2E8F0"
+                    android:textSize="13sp" />
+
+                <RadioButton
+                    android:id="@+id/rbThemeSystem"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="System Default 📱"
+                    android:textColor="#E2E8F0"
+                    android:textSize="13sp" />
+
+            </RadioGroup>
+
+        </LinearLayout>
+
+        <!-- NOTIFICATION PREFERENCE CARD -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="#171A27"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔔 Notification Preferences"
+                android:textColor="#F8FAFC"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Event Announcements &amp; Status Alerts"
+                    android:textColor="#E2E8F0"
+                    android:textSize="13sp" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchNotifications"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true" />
+
+            </LinearLayout>
+
         </LinearLayout>
 
         <!-- SYSTEM INFO CARD -->

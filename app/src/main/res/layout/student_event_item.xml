@@ -110,4 +110,15 @@
         android:textColor="#64748B"
         android:textSize="11sp" />
 
+    <TextView
+        android:id="@+id/tvStudentDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:text="Short event description..."
+        android:textColor="#94A3B8"
+        android:textSize="12sp" />
+
 </LinearLayout>

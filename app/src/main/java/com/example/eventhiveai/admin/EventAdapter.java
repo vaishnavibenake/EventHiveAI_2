@@ -222,12 +222,17 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
 
                         notification.put(
                                 "message",
-                                "Your event is approved and is now visible to students."
+                                "Your event proposal has been approved and is now live for students."
                         );
 
                         notification.put(
                                 "recipientRole",
-                                "STUDENT"
+                                "COORDINATOR"
+                        );
+
+                        notification.put(
+                                "targetUid",
+                                event.getCoordinatorId()
                         );
 
                         notification.put(

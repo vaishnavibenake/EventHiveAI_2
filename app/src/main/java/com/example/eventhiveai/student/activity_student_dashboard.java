@@ -4,7 +4,9 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.EditText;
@@ -28,8 +30,10 @@ import com.example.eventhiveai.models.UserModel;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -41,6 +45,8 @@ import java.util.Locale;
 import java.util.Set;
 
 public class activity_student_dashboard extends AppCompatActivity {
+
+    private static final String TAG = "StudentDashboard";
 
     private FirebaseAuth firebaseAuth;
     private FirebaseFirestore firestore;
@@ -68,6 +74,7 @@ public class activity_student_dashboard extends AppCompatActivity {
     private View btnQuickPasses;
     private View btnQuickParticipation;
     private View btnQuickGallery;
+    private View btnAskAi;
 
     private EditText searchEditText;
 
@@ -109,6 +116,7 @@ public class activity_student_dashboard extends AppCompatActivity {
     private final ArrayList<EventModel> recommendedList = new ArrayList<>();
     private final ArrayList<EventModel> filteredUpcomingList = new ArrayList<>();
 
+    private ListenerRegistration approvedEventsListener;
     private String selectedCategory = "All";
 
     @Override
@@ -128,8 +136,14 @@ public class activity_student_dashboard extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        loadApprovedEvents();
+        startApprovedEventsListener();
         loadStudentLiveMetrics();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopApprovedEventsListener();
     }
 
     private void initializeViews() {
@@ -154,6 +168,7 @@ public class activity_student_dashboard extends AppCompatActivity {
         btnQuickPasses = findViewById(R.id.btnQuickPasses);
         btnQuickParticipation = findViewById(R.id.btnQuickParticipation);
         btnQuickGallery = findViewById(R.id.btnQuickGallery);
+        btnAskAi = findViewById(R.id.btnAskAi);
 
         searchEditText = findViewById(R.id.searchEditText);
 
@@ -232,6 +247,10 @@ public class activity_student_dashboard extends AppCompatActivity {
 
         if (btnQuickGallery != null) {
             btnQuickGallery.setOnClickListener(v -> startActivity(new Intent(this, com.example.eventhiveai.coordinator.EventGalleryActivity.class)));
+        }
+
+        if (btnAskAi != null) {
+            btnAskAi.setOnClickListener(v -> startActivity(new Intent(this, ChatbotActivity.class)));
         }
 
         // Notifications & Nav
@@ -356,7 +375,7 @@ public class activity_student_dashboard extends AppCompatActivity {
 
                         tvStudentProfileDetails.setText("🏛️ " + deptStr + " • " + yearStr + rollStr);
 
-                        loadApprovedEvents();
+                        startApprovedEventsListener();
                         loadStudentLiveMetrics();
                     }
                 })
@@ -406,22 +425,26 @@ public class activity_student_dashboard extends AppCompatActivity {
                 });
     }
 
-    private void loadApprovedEvents() {
-        firestore.collection("events")
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
+    private void startApprovedEventsListener() {
+        stopApprovedEventsListener();
+
+        approvedEventsListener = firestore.collection("events")
+                .whereEqualTo("status", "approved")
+                .addSnapshotListener((queryDocumentSnapshots, error) -> {
+                    if (isFinishing() || isDestroyed()) return;
+
+                    if (error != null) {
+                        Log.e(TAG, "Error listening for approved events: " + error.getMessage(), error);
+                        return;
+                    }
+
+                    if (queryDocumentSnapshots == null) return;
+
                     approvedEvents.clear();
                     int upcomingCount = 0;
                     String todayStr = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
 
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        String status = doc.getString("status");
-
-                        boolean isApproved = "approved".equalsIgnoreCase(status) ||
-                                (status != null && status.toLowerCase().contains("approve"));
-
-                        if (!isApproved) continue;
-
                         EventModel event = doc.toObject(EventModel.class);
                         if (event == null) event = new EventModel();
                         event.setEventId(doc.getId());
@@ -436,21 +459,42 @@ public class activity_student_dashboard extends AppCompatActivity {
                         if (doc.contains("department") && doc.getString("department") != null) event.setDepartment(doc.getString("department"));
                         if (doc.contains("category") && doc.getString("category") != null) event.setCategory(doc.getString("category"));
                         if (doc.contains("participationType") && doc.getString("participationType") != null) event.setParticipationType(doc.getString("participationType"));
+                        if (doc.contains("description") && doc.getString("description") != null) event.setDescription(doc.getString("description"));
 
                         approvedEvents.add(event);
 
-                        // Count upcoming (date >= today or no date specified)
-                        String eventDate = event.getDate();
-                        if (eventDate.isEmpty() || eventDate.compareTo(todayStr) >= 0) {
+                        String normDate = normalizeToDbDate(event.getDate());
+                        if (normDate.isEmpty() || normDate.compareTo(todayStr) >= 0) {
                             upcomingCount++;
                         }
                     }
 
-                    tvStatUpcomingEvents.setText(String.valueOf(upcomingCount));
+                    if (tvStatUpcomingEvents != null) {
+                        tvStatUpcomingEvents.setText(String.valueOf(upcomingCount));
+                    }
 
-                    Collections.sort(approvedEvents, (e1, e2) -> e1.getDate().compareTo(e2.getDate()));
+                    Collections.sort(approvedEvents, (e1, e2) -> normalizeToDbDate(e1.getDate()).compareTo(normalizeToDbDate(e2.getDate())));
                     applyFilterAndSearch();
                 });
+    }
+
+    private void stopApprovedEventsListener() {
+        if (approvedEventsListener != null) {
+            approvedEventsListener.remove();
+            approvedEventsListener = null;
+        }
+    }
+
+    private String normalizeToDbDate(String inputDate) {
+        if (TextUtils.isEmpty(inputDate)) return "";
+        if (inputDate.matches("\\d{4}-\\d{2}-\\d{2}")) return inputDate;
+        try {
+            SimpleDateFormat displayFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+            SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            Date d = displayFormat.parse(inputDate);
+            if (d != null) return dbFormat.format(d);
+        } catch (ParseException ignored) {}
+        return inputDate;
     }
 
     private void applyFilterAndSearch() {
@@ -469,10 +513,15 @@ public class activity_student_dashboard extends AppCompatActivity {
             tvRecommendedEmpty.setVisibility(recommendedList.isEmpty() ? View.VISIBLE : View.GONE);
         }
 
-        // 2. Upcoming Events
+        // 2. Upcoming Events (Include approved events on/after today)
         filteredUpcomingList.clear();
+        String todayStr = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+
         for (EventModel event : approvedEvents) {
-            if (matchesCategoryAndSearch(event, selectedCategory, searchQuery)) {
+            String normDate = normalizeToDbDate(event.getDate());
+            boolean isUpcoming = normDate.isEmpty() || normDate.compareTo(todayStr) >= 0;
+
+            if (isUpcoming && matchesCategoryAndSearch(event, selectedCategory, searchQuery)) {
                 filteredUpcomingList.add(event);
             }
         }

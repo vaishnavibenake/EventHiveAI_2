@@ -203,7 +203,14 @@ public class EventDetailsActivity extends AppCompatActivity {
         tvDetailDepartment.setText("🏛️ Dept: " + (currentEvent.getDepartment().isEmpty() ? "All" : currentEvent.getDepartment()));
 
         tvDetailCapacity.setText("👥 Capacity: " + (currentEvent.getMaxParticipants() > 0 ? currentEvent.getMaxParticipants() : "Open"));
-        tvDetailBudget.setText("💰 Budget: ₹" + (int) currentEvent.getBudget());
+
+        if ("ADMIN".equals(userRole) || "COORDINATOR".equals(userRole)) {
+            tvDetailBudget.setText("💰 Budget: ₹" + (int) currentEvent.getBudget());
+            tvDetailBudget.setVisibility(View.VISIBLE);
+        } else {
+            tvDetailBudget.setVisibility(View.GONE);
+        }
+
         tvDetailDeadline.setText("⏳ Reg. Deadline: " + (currentEvent.getRegistrationDeadline().isEmpty() ? "None" : currentEvent.getRegistrationDeadline()));
 
         tvDetailDescription.setText(currentEvent.getDescription().isEmpty() ? "No description provided." : currentEvent.getDescription());
@@ -284,6 +291,16 @@ public class EventDetailsActivity extends AppCompatActivity {
         db.collection("events").document(eventId)
                 .update("status", "approved", "rejectionReason", "")
                 .addOnSuccessListener(unused -> {
+                    if (currentEvent != null && currentEvent.getCoordinatorId() != null && !currentEvent.getCoordinatorId().isEmpty()) {
+                        Map<String, Object> notif = new HashMap<>();
+                        notif.put("title", "Event approved: " + currentEvent.getEventName());
+                        notif.put("message", "Your event proposal has been approved and is now live for students.");
+                        notif.put("recipientRole", "COORDINATOR");
+                        notif.put("targetUid", currentEvent.getCoordinatorId());
+                        notif.put("timestamp", FieldValue.serverTimestamp());
+                        db.collection("notifications").add(notif);
+                    }
+
                     Toast.makeText(EventDetailsActivity.this, "Event approved! Now live for students.", Toast.LENGTH_SHORT).show();
                     loadEventDetails();
                 })
@@ -310,6 +327,16 @@ public class EventDetailsActivity extends AppCompatActivity {
             db.collection("events").document(eventId)
                     .update("status", "rejected", "rejectionReason", reason)
                     .addOnSuccessListener(unused -> {
+                        if (currentEvent != null && currentEvent.getCoordinatorId() != null && !currentEvent.getCoordinatorId().isEmpty()) {
+                            Map<String, Object> notif = new HashMap<>();
+                            notif.put("title", "Event proposal declined: " + currentEvent.getEventName());
+                            notif.put("message", "Reason: " + reason);
+                            notif.put("recipientRole", "COORDINATOR");
+                            notif.put("targetUid", currentEvent.getCoordinatorId());
+                            notif.put("timestamp", FieldValue.serverTimestamp());
+                            db.collection("notifications").add(notif);
+                        }
+
                         Toast.makeText(EventDetailsActivity.this, "Event rejected with reason saved.", Toast.LENGTH_SHORT).show();
                         loadEventDetails();
                     })

@@ -2,13 +2,17 @@ package com.example.eventhiveai.coordinator;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,7 +33,10 @@ import java.util.List;
 
 public class CoordinatorRegistrationsActivity extends AppCompatActivity {
 
+    private static final String TAG = "CoordRegistrations";
+
     private ImageButton btnBack;
+    private Spinner spinnerEventsFilter;
     private RecyclerView recyclerRegistrations;
     private ProgressBar progressBar;
     private LinearLayout emptyView;
@@ -38,18 +45,25 @@ public class CoordinatorRegistrationsActivity extends AppCompatActivity {
     private TextView tvAttendedCount;
     private TextView tvPendingCount;
 
-    private ArrayList<RegistrationModel> list;
+    private final List<String> eventFilterIds = new ArrayList<>();
+    private final List<String> eventFilterNames = new ArrayList<>();
+
+    private final ArrayList<RegistrationModel> allRegistrationsList = new ArrayList<>();
+    private final ArrayList<RegistrationModel> displayedRegistrationsList = new ArrayList<>();
+
     private RegAdapter adapter;
     private FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        com.example.eventhiveai.SettingsActivity.applySavedTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_coordinator_registrations);
 
         db = FirebaseFirestore.getInstance();
 
         btnBack = findViewById(R.id.btnBack);
+        spinnerEventsFilter = findViewById(R.id.spinnerEventsFilter);
         recyclerRegistrations = findViewById(R.id.recyclerRegistrations);
         progressBar = findViewById(R.id.progressBar);
         emptyView = findViewById(R.id.emptyView);
@@ -59,12 +73,77 @@ public class CoordinatorRegistrationsActivity extends AppCompatActivity {
         tvPendingCount = findViewById(R.id.tvPendingCount);
 
         recyclerRegistrations.setLayoutManager(new LinearLayoutManager(this));
-        list = new ArrayList<>();
-        adapter = new RegAdapter(list, db, this::updateAttendanceMetrics);
+        adapter = new RegAdapter(displayedRegistrationsList, db, this::updateAttendanceMetrics);
         recyclerRegistrations.setAdapter(adapter);
 
         btnBack.setOnClickListener(v -> finish());
+
+        setupEventFilterSpinner();
+        loadCoordinatorEvents();
         loadRegistrations();
+    }
+
+    private void setupEventFilterSpinner() {
+        eventFilterIds.clear();
+        eventFilterNames.clear();
+
+        eventFilterIds.add("ALL");
+        eventFilterNames.add("All Events (Show All)");
+
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                eventFilterNames
+        );
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerEventsFilter.setAdapter(spinnerAdapter);
+
+        spinnerEventsFilter.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                applyEventFilter();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+    }
+
+    private void loadCoordinatorEvents() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) return;
+
+        db.collection("events")
+                .whereEqualTo("coordinatorId", currentUser.getUid())
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (isFinishing() || isDestroyed()) return;
+
+                    eventFilterIds.clear();
+                    eventFilterNames.clear();
+
+                    eventFilterIds.add("ALL");
+                    eventFilterNames.add("All Events (Show All)");
+
+                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                        String eId = doc.getId();
+                        String eName = doc.getString("eventName");
+                        if (eName == null || eName.isEmpty()) eName = eId;
+
+                        eventFilterIds.add(eId);
+                        eventFilterNames.add(eName);
+                    }
+
+                    ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
+                            CoordinatorRegistrationsActivity.this,
+                            android.R.layout.simple_spinner_item,
+                            eventFilterNames
+                    );
+                    spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    spinnerEventsFilter.setAdapter(spinnerAdapter);
+                })
+                .addOnFailureListener(e ->
+                        Log.e(TAG, "Error loading coordinator events for filter: " + e.getMessage(), e));
     }
 
     private void loadRegistrations() {
@@ -80,13 +159,17 @@ public class CoordinatorRegistrationsActivity extends AppCompatActivity {
 
         db.collection("registrations").whereEqualTo("coordinatorId", currentUser.getUid()).get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (isFinishing() || isDestroyed()) return;
+
                     progressBar.setVisibility(View.GONE);
-                    list.clear();
+                    allRegistrationsList.clear();
 
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
                         RegistrationModel reg = doc.toObject(RegistrationModel.class);
                         if (reg == null) reg = new RegistrationModel();
                         reg.setRegistrationId(doc.getId());
+
+                        if (doc.contains("eventId")) reg.setEventId(doc.getString("eventId"));
                         if (doc.contains("eventName")) reg.setEventName(doc.getString("eventName"));
                         if (doc.contains("studentName")) reg.setStudentName(doc.getString("studentName"));
                         if (doc.contains("studentEmail")) reg.setStudentEmail(doc.getString("studentEmail"));
@@ -103,26 +186,50 @@ public class CoordinatorRegistrationsActivity extends AppCompatActivity {
                             reg.setMemberCount(mc != null ? mc.intValue() : 1);
                         }
 
-                        list.add(reg);
+                        allRegistrationsList.add(reg);
                     }
 
-                    adapter.notifyDataSetChanged();
-                    updateAttendanceMetrics();
-
-                    if (list.isEmpty()) {
-                        emptyView.setVisibility(View.VISIBLE);
-                    }
+                    applyEventFilter();
                 })
                 .addOnFailureListener(e -> {
+                    if (isFinishing() || isDestroyed()) return;
                     progressBar.setVisibility(View.GONE);
-                    Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Error loading registrations: " + e.getMessage(), e);
+                    Toast.makeText(this, "Error loading registrations: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
+    private void applyEventFilter() {
+        int selectedIdx = spinnerEventsFilter != null ? spinnerEventsFilter.getSelectedItemPosition() : 0;
+        String targetEventId = (selectedIdx >= 0 && selectedIdx < eventFilterIds.size()) ? eventFilterIds.get(selectedIdx) : "ALL";
+
+        displayedRegistrationsList.clear();
+
+        if ("ALL".equals(targetEventId)) {
+            displayedRegistrationsList.addAll(allRegistrationsList);
+        } else {
+            for (RegistrationModel reg : allRegistrationsList) {
+                if (targetEventId.equals(reg.getEventId())) {
+                    displayedRegistrationsList.add(reg);
+                }
+            }
+        }
+
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
+
+        updateAttendanceMetrics();
+
+        if (emptyView != null) {
+            emptyView.setVisibility(displayedRegistrationsList.isEmpty() ? View.VISIBLE : View.GONE);
+        }
+    }
+
     private void updateAttendanceMetrics() {
-        int total = list.size();
+        int total = displayedRegistrationsList.size();
         int attended = 0;
-        for (RegistrationModel r : list) {
+        for (RegistrationModel r : displayedRegistrationsList) {
             if ("attended".equalsIgnoreCase(r.getStatus())) attended++;
         }
         int pending = total - attended;
@@ -191,6 +298,7 @@ public class CoordinatorRegistrationsActivity extends AppCompatActivity {
 
             holder.btnToggleAttendance.setOnClickListener(v -> {
                 String newStatus = isAttended ? "registered" : "attended";
+
                 holder.btnToggleAttendance.setEnabled(false);
 
                 // Update registration status

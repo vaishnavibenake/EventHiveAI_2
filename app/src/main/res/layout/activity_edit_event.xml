@@ -96,7 +96,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:text="Date (YYYY-MM-DD) *"
+            android:text="Date (DD-MM-YYYY) *"
             android:textColor="#CBD5E1"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -107,9 +107,13 @@
             android:layout_height="50dp"
             android:layout_marginTop="6dp"
             android:background="@drawable/input_background"
+            android:clickable="true"
+            android:focusable="false"
+            android:hint="Tap to select date"
             android:paddingStart="14dp"
             android:paddingEnd="14dp"
             android:textColor="#FFFFFF"
+            android:textColorHint="#64748B"
             android:textSize="14sp" />
 
         <!-- START & END TIME -->
@@ -140,9 +144,13 @@
                     android:layout_height="50dp"
                     android:layout_marginTop="6dp"
                     android:background="@drawable/input_background"
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:hint="Tap to select start time"
                     android:paddingStart="14dp"
                     android:paddingEnd="14dp"
                     android:textColor="#FFFFFF"
+                    android:textColorHint="#64748B"
                     android:textSize="14sp" />
             </LinearLayout>
 
@@ -167,9 +175,13 @@
                     android:layout_height="50dp"
                     android:layout_marginTop="6dp"
                     android:background="@drawable/input_background"
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:hint="Tap to select end time"
                     android:paddingStart="14dp"
                     android:paddingEnd="14dp"
                     android:textColor="#FFFFFF"
+                    android:textColorHint="#64748B"
                     android:textSize="14sp" />
             </LinearLayout>
 

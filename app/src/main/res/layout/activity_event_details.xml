@@ -234,7 +234,8 @@
                     android:layout_weight="1"
                     android:text="💰 Budget: ₹5,000"
                     android:textColor="#CBD5E1"
-                    android:textSize="13sp" />
+                    android:textSize="13sp"
+                    android:visibility="gone" />
 
             </LinearLayout>
 

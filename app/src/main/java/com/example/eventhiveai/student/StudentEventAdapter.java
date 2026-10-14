@@ -73,6 +73,16 @@ public class StudentEventAdapter extends RecyclerView.Adapter<StudentEventAdapte
         String dept = event.getDepartment();
         holder.tvStudentDepartment.setText("🏛️ Dept: " + (TextUtils.isEmpty(dept) ? "All" : dept));
 
+        if (holder.tvStudentDescription != null) {
+            String desc = event.getDescription();
+            if (!TextUtils.isEmpty(desc)) {
+                holder.tvStudentDescription.setText(desc);
+                holder.tvStudentDescription.setVisibility(View.VISIBLE);
+            } else {
+                holder.tvStudentDescription.setVisibility(View.GONE);
+            }
+        }
+
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(context, EventDetailsActivity.class);
             intent.putExtra("EVENT_ID", event.getEventId());
@@ -88,7 +98,7 @@ public class StudentEventAdapter extends RecyclerView.Adapter<StudentEventAdapte
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvStudentEventName, tvStudentParticipationType, tvStudentClubName,
-                tvStudentCategory, tvStudentDate, tvStudentVenue, tvStudentDepartment;
+                tvStudentCategory, tvStudentDate, tvStudentVenue, tvStudentDepartment, tvStudentDescription;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -99,6 +109,7 @@ public class StudentEventAdapter extends RecyclerView.Adapter<StudentEventAdapte
             tvStudentDate = itemView.findViewById(R.id.tvStudentDate);
             tvStudentVenue = itemView.findViewById(R.id.tvStudentVenue);
             tvStudentDepartment = itemView.findViewById(R.id.tvStudentDepartment);
+            tvStudentDescription = itemView.findViewById(R.id.tvStudentDescription);
         }
     }
 }

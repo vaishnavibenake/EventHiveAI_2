@@ -45,7 +45,17 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+    // Note: firebase-storage intentionally removed — photos are now stored in ImageKit
     implementation("androidx.drawerlayout:drawerlayout:1.2.0")
+
+    // Required for Tasks.await() when fetching Firebase ID tokens on background threads
+    implementation("com.google.android.gms:play-services-tasks:18.2.0")
+
+    // Image Loading
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+
+    // Charts for Analytics
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.espresso.core)

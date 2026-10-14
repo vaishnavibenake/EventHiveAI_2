@@ -72,12 +72,12 @@
             android:textColorHint="#64748B"
             android:textSize="14sp" />
 
-        <!-- 2. CLUB NAME -->
+        <!-- 2. CLUB NAME (READ-ONLY AUTO-FILLED ASSIGNED CLUB) -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:text="Organizing Club *"
+            android:text="Organizing Club (Assigned Profile) *"
             android:textColor="#CBD5E1"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -88,12 +88,15 @@
             android:layout_height="50dp"
             android:layout_marginTop="6dp"
             android:background="@drawable/input_background"
-            android:hint="e.g. Coding Club / Robotics Club"
+            android:clickable="false"
+            android:focusable="false"
+            android:hint="Assigned club will auto-fill..."
             android:paddingStart="14dp"
             android:paddingEnd="14dp"
-            android:textColor="#FFFFFF"
+            android:textColor="#A78BFA"
             android:textColorHint="#64748B"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
         <!-- 3. DESCRIPTION -->
         <TextView
@@ -123,7 +126,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:text="Date (YYYY-MM-DD) *"
+            android:text="Date (DD-MM-YYYY) *"
             android:textColor="#CBD5E1"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -134,7 +137,9 @@
             android:layout_height="50dp"
             android:layout_marginTop="6dp"
             android:background="@drawable/input_background"
-            android:hint="e.g. 2026-10-25"
+            android:clickable="true"
+            android:focusable="false"
+            android:hint="Tap to select date (e.g. 25-10-2026)"
             android:paddingStart="14dp"
             android:paddingEnd="14dp"
             android:textColor="#FFFFFF"
@@ -169,7 +174,9 @@
                     android:layout_height="50dp"
                     android:layout_marginTop="6dp"
                     android:background="@drawable/input_background"
-                    android:hint="10:00 AM"
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:hint="Tap to select start time"
                     android:paddingStart="14dp"
                     android:paddingEnd="14dp"
                     android:textColor="#FFFFFF"
@@ -198,7 +205,9 @@
                     android:layout_height="50dp"
                     android:layout_marginTop="6dp"
                     android:background="@drawable/input_background"
-                    android:hint="01:00 PM"
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:hint="Tap to select end time"
                     android:paddingStart="14dp"
                     android:paddingEnd="14dp"
                     android:textColor="#FFFFFF"
@@ -441,7 +450,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:text="Registration Deadline (YYYY-MM-DD)"
+            android:text="Registration Deadline (DD-MM-YYYY)"
             android:textColor="#CBD5E1"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -452,7 +461,9 @@
             android:layout_height="50dp"
             android:layout_marginTop="6dp"
             android:background="@drawable/input_background"
-            android:hint="e.g. 2026-10-24"
+            android:clickable="true"
+            android:focusable="false"
+            android:hint="Tap to select deadline (e.g. 24-10-2026)"
             android:paddingStart="14dp"
             android:paddingEnd="14dp"
             android:textColor="#FFFFFF"

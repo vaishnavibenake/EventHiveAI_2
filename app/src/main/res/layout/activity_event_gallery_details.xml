@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -32,7 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:text="Event Name"
+            android:text="Event Gallery"
             android:textColor="#F8FAFC"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -42,52 +41,70 @@
     </LinearLayout>
 
     <!-- CONTENT -->
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="16dp">
 
             <!-- PHOTOS SECTION -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="📸 Event Photos"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:text="Photos from this completed event will appear here."
-                android:textColor="#94A3B8"
-                android:textSize="13sp" />
-
             <LinearLayout
-                android:id="@+id/photosContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:orientation="vertical">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
 
                 <TextView
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:background="#171A27"
-                    android:padding="20dp"
-                    android:gravity="center"
-                    android:text="No event photos added yet."
+                    android:layout_weight="1"
+                    android:text="📸 Event Photos"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Long-press a photo to delete"
                     android:textColor="#64748B"
-                    android:textSize="14sp" />
+                    android:textSize="11sp" />
 
             </LinearLayout>
+
+            <ProgressBar
+                android:id="@+id/progressBarPhotos"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvEmptyPhotos"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#171A27"
+                android:padding="28dp"
+                android:gravity="center"
+                android:text="📷 No photos yet.\nTap the + button below to upload photos."
+                android:textColor="#64748B"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <!-- PHOTO GRID (2 columns) -->
+            <GridLayout
+                android:id="@+id/photoGrid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:layout_marginTop="4dp" />
 
             <!-- WINNERS SECTION -->
             <TextView
@@ -96,13 +113,13 @@
                 android:layout_marginTop="28dp"
                 android:text="🏆 Winners"
                 android:textColor="#FFFFFF"
-                android:textSize="20sp"
+                android:textSize="18sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="4dp"
                 android:text="Winners of this event will appear here."
                 android:textColor="#94A3B8"
                 android:textSize="13sp" />
@@ -111,23 +128,27 @@
                 android:id="@+id/winnersContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:orientation="vertical">
+                android:layout_marginTop="12dp"
+                android:orientation="vertical" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="#171A27"
-                    android:padding="20dp"
-                    android:gravity="center"
-                    android:text="No winners added yet."
-                    android:textColor="#64748B"
-                    android:textSize="14sp" />
-
-            </LinearLayout>
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="80dp" />
 
         </LinearLayout>
 
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- FAB for adding photos -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddPhotos"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_margin="16dp"
+        android:contentDescription="Add Photos"
+        app:srcCompat="@android:drawable/ic_input_add"
+        app:backgroundTint="#7C3AED"
+        app:tint="#FFFFFF" />
 
 </LinearLayout>

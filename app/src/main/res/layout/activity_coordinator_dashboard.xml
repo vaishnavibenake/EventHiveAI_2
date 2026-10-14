@@ -418,17 +418,39 @@
 
             </LinearLayout>
 
-            <Button
-                android:id="@+id/btnCoordAnalytics"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:backgroundTint="#171A27"
-                android:text="📈  View Club Analytics"
-                android:textAllCaps="false"
-                android:textColor="#8B5CF6"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnCoordAnalytics"
+                    android:layout_width="0dp"
+                    android:layout_height="54dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:backgroundTint="#171A27"
+                    android:text="📈  Analytics"
+                    android:textAllCaps="false"
+                    android:textColor="#8B5CF6"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/btnCoordReports"
+                    android:layout_width="0dp"
+                    android:layout_height="54dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:backgroundTint="#171A27"
+                    android:text="📊  Reports"
+                    android:textAllCaps="false"
+                    android:textColor="#10B981"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
 
             <Space
                 android:layout_width="match_parent"
@@ -631,25 +653,36 @@
                     android:textColor="#CBD5E1"
                     android:textSize="14sp" />
 
-                <!-- 9. Notifications -->
+                <!-- 9. Reports -->
+                <TextView
+                    android:id="@+id/menuCoordReports"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="20dp"
+                    android:text="📊  9. Reports &amp; Export"
+                    android:textColor="#CBD5E1"
+                    android:textSize="14sp" />
+
+                <!-- 10. Notifications -->
                 <TextView
                     android:id="@+id/menuCoordNotifications"
                     android:layout_width="match_parent"
                     android:layout_height="44dp"
                     android:gravity="center_vertical"
                     android:paddingStart="20dp"
-                    android:text="🔔  9. Notifications"
+                    android:text="🔔  10. Notifications"
                     android:textColor="#CBD5E1"
                     android:textSize="14sp" />
 
-                <!-- 10. Settings -->
+                <!-- 11. Settings -->
                 <TextView
                     android:id="@+id/menuCoordSettings"
                     android:layout_width="match_parent"
                     android:layout_height="44dp"
                     android:gravity="center_vertical"
                     android:paddingStart="20dp"
-                    android:text="⚙️  10. Settings"
+                    android:text="⚙️  11. Settings"
                     android:textColor="#CBD5E1"
                     android:textSize="14sp" />
 

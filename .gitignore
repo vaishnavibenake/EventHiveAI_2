@@ -13,3 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Backend secrets — never commit these
+firebase-service-account.json
+.env
+eventhive-gallery-backend/.env
+eventhive-gallery-backend/firebase-service-account.json

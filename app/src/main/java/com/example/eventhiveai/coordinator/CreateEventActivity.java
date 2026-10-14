@@ -1,6 +1,7 @@
-
 package com.example.eventhiveai.coordinator;
 
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -20,7 +21,12 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class CreateEventActivity extends AppCompatActivity {
@@ -43,6 +49,7 @@ public class CreateEventActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        com.example.eventhiveai.SettingsActivity.applySavedTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_event);
 
@@ -71,6 +78,15 @@ public class CreateEventActivity extends AppCompatActivity {
         btnSubmitEvent = findViewById(R.id.btnSubmitEvent);
 
         setupSpinners();
+        setupDatePicker(etDate);
+        setupDatePicker(etDeadline);
+        setupTimePicker(etStartTime);
+        setupTimePicker(etEndTime);
+
+        // Club name is populated from trusted Firestore data — must not be edited manually
+        etClubName.setFocusable(false);
+        etClubName.setClickable(false);
+        etClubName.setEnabled(false);
 
         spinnerParticipationType.setOnItemSelectedListener(
                 new android.widget.AdapterView.OnItemSelectedListener() {
@@ -101,6 +117,89 @@ public class CreateEventActivity extends AppCompatActivity {
         btnSubmitEvent.setOnClickListener(v -> submitEvent());
 
         loadCoordinatorClubInfo();
+    }
+
+    private void setupDatePicker(EditText editText) {
+        editText.setFocusable(false);
+        editText.setClickable(true);
+        editText.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            String currentText = editText.getText().toString().trim();
+            if (!TextUtils.isEmpty(currentText)) {
+                try {
+                    SimpleDateFormat displayFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+                    Date d = displayFormat.parse(currentText);
+                    if (d != null) calendar.setTime(d);
+                } catch (ParseException ignored) {}
+            }
+
+            int year = calendar.get(Calendar.YEAR);
+            int month = calendar.get(Calendar.MONTH);
+            int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+            DatePickerDialog dialog = new DatePickerDialog(
+                    CreateEventActivity.this,
+                    (view, selectedYear, selectedMonth, selectedDay) -> {
+                        Calendar selectedCal = Calendar.getInstance();
+                        selectedCal.set(selectedYear, selectedMonth, selectedDay);
+                        SimpleDateFormat displayFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+                        editText.setText(displayFormat.format(selectedCal.getTime()));
+                        editText.setError(null);
+                    },
+                    year, month, day
+            );
+            dialog.show();
+        });
+    }
+
+    private void setupTimePicker(EditText editText) {
+        editText.setFocusable(false);
+        editText.setClickable(true);
+        editText.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            String currentText = editText.getText().toString().trim();
+            if (!TextUtils.isEmpty(currentText)) {
+                try {
+                    SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+                    Date d = timeFormat.parse(currentText);
+                    if (d != null) {
+                        Calendar tempCal = Calendar.getInstance();
+                        tempCal.setTime(d);
+                        calendar.set(Calendar.HOUR_OF_DAY, tempCal.get(Calendar.HOUR_OF_DAY));
+                        calendar.set(Calendar.MINUTE, tempCal.get(Calendar.MINUTE));
+                    }
+                } catch (ParseException ignored) {}
+            }
+
+            int hour = calendar.get(Calendar.HOUR_OF_DAY);
+            int minute = calendar.get(Calendar.MINUTE);
+
+            TimePickerDialog dialog = new TimePickerDialog(
+                    CreateEventActivity.this,
+                    (view, selectedHour, selectedMinute) -> {
+                        Calendar selectedCal = Calendar.getInstance();
+                        selectedCal.set(Calendar.HOUR_OF_DAY, selectedHour);
+                        selectedCal.set(Calendar.MINUTE, selectedMinute);
+                        SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+                        editText.setText(timeFormat.format(selectedCal.getTime()));
+                        editText.setError(null);
+                    },
+                    hour, minute, false
+            );
+            dialog.show();
+        });
+    }
+
+    private String convertDisplayToDbDate(String displayDate) {
+        if (TextUtils.isEmpty(displayDate)) return "";
+        try {
+            SimpleDateFormat displayFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+            SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            Date d = displayFormat.parse(displayDate);
+            return d != null ? dbFormat.format(d) : displayDate;
+        } catch (ParseException e) {
+            return displayDate;
+        }
     }
 
     private void setupSpinners() {
@@ -189,7 +288,7 @@ public class CreateEventActivity extends AppCompatActivity {
         String name = etEventName.getText().toString().trim();
         String club = etClubName.getText().toString().trim();
         String desc = etDescription.getText().toString().trim();
-        String date = etDate.getText().toString().trim();
+        String dateDisplay = etDate.getText().toString().trim();
         String startTime = etStartTime.getText().toString().trim();
         String endTime = etEndTime.getText().toString().trim();
         String venue = etVenue.getText().toString().trim();
@@ -197,7 +296,7 @@ public class CreateEventActivity extends AppCompatActivity {
         String department = spinnerDepartment.getSelectedItem().toString();
         String budgetStr = etBudget.getText().toString().trim();
         String maxStr = etMaxParticipants.getText().toString().trim();
-        String deadline = etDeadline.getText().toString().trim();
+        String deadlineDisplay = etDeadline.getText().toString().trim();
 
         String participationType =
                 spinnerParticipationType.getSelectedItem().toString();
@@ -267,8 +366,8 @@ public class CreateEventActivity extends AppCompatActivity {
             return;
         }
 
-        if (TextUtils.isEmpty(date)) {
-            etDate.setError("Event Date is required (YYYY-MM-DD)");
+        if (TextUtils.isEmpty(dateDisplay)) {
+            etDate.setError("Event Date is required (DD-MM-YYYY)");
             etDate.requestFocus();
             return;
         }
@@ -289,6 +388,36 @@ public class CreateEventActivity extends AppCompatActivity {
             etVenue.setError("Venue is required");
             etVenue.requestFocus();
             return;
+        }
+
+        // Validate end time > start time
+        try {
+            SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+            Date startParsed = timeFormat.parse(startTime);
+            Date endParsed = timeFormat.parse(endTime);
+            if (startParsed != null && endParsed != null && !endParsed.after(startParsed)) {
+                etEndTime.setError("End time must be after start time");
+                etEndTime.requestFocus();
+                return;
+            }
+        } catch (ParseException ignored) {
+            // If times can't be parsed, allow them through — they were set by the time picker
+        }
+
+        // Validate registration deadline is not after event date (if provided)
+        if (!TextUtils.isEmpty(deadlineDisplay)) {
+            try {
+                SimpleDateFormat displayFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+                Date eventDate = displayFormat.parse(dateDisplay);
+                Date deadlineDate = displayFormat.parse(deadlineDisplay);
+                if (eventDate != null && deadlineDate != null && deadlineDate.after(eventDate)) {
+                    etDeadline.setError("Registration deadline cannot be after the event date");
+                    etDeadline.requestFocus();
+                    return;
+                }
+            } catch (ParseException ignored) {
+                // Dates set by picker — allow through
+            }
         }
 
         int maxParticipants = 100;
@@ -332,6 +461,9 @@ public class CreateEventActivity extends AppCompatActivity {
         btnSubmitEvent.setEnabled(false);
         btnSubmitEvent.setText("Submitting Proposal...");
 
+        String dateDb = convertDisplayToDbDate(dateDisplay);
+        String deadlineDb = convertDisplayToDbDate(deadlineDisplay);
+
         String eventId = "event_" + System.currentTimeMillis();
 
         Map<String, Object> eventData = new HashMap<>();
@@ -341,7 +473,7 @@ public class CreateEventActivity extends AppCompatActivity {
         eventData.put("clubName", club);
         eventData.put("clubId", coordinatorClubId);
         eventData.put("description", desc);
-        eventData.put("date", date);
+        eventData.put("date", dateDb);
         eventData.put("startTime", startTime);
         eventData.put("endTime", endTime);
         eventData.put("venue", venue);
@@ -349,7 +481,7 @@ public class CreateEventActivity extends AppCompatActivity {
         eventData.put("department", department);
         eventData.put("budget", budget);
         eventData.put("maxParticipants", maxParticipants);
-        eventData.put("registrationDeadline", deadline);
+        eventData.put("registrationDeadline", deadlineDb);
         eventData.put("coordinatorId", currentUser.getUid());
 
         // Participation settings

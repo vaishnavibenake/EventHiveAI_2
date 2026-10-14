@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Network Security Configuration for EventHive.
+
+    ── Development only ──────────────────────────────────────────────────────
+    Allows HTTP (cleartext) traffic to localhost and the typical Android
+    emulator host (10.0.2.2) and a placeholder LAN IP range so you can
+    reach your local backend from a physical device on the same Wi-Fi.
+
+    IMPORTANT: Before releasing to production, replace the backend URL with
+    an HTTPS endpoint (Railway, Render, etc.) and remove the cleartext
+    domains below — or they will be blocked by the Play Store policies.
+
+    Replace 192.168.X.X with your PC's actual LAN IP when testing on a
+    physical device. You can find it with:
+        ipconfig    (look for the IPv4 address of your Wi-Fi adapter)
+    ──────────────────────────────────────────────────────────────────────────
+-->
+<network-security-config>
+
+    <!-- Allow HTTP to local backend during development -->
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Android emulator → host machine -->
+        <domain includeSubdomains="false">10.0.2.2</domain>
+
+        <!-- Physical device on LAN — change to your PC's actual IP -->
+        <!-- Example: <domain includeSubdomains="false">192.168.1.42</domain> -->
+        <domain includeSubdomains="false">10.233.21.55</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+
+    <!-- All other traffic uses the system default (HTTPS required) -->
+    <base-config cleartextTrafficPermitted="false" />
+
+</network-security-config>

@@ -39,6 +39,7 @@ public class ClubProfileActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        com.example.eventhiveai.SettingsActivity.applySavedTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_club_profile);
 

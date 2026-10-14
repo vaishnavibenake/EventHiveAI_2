@@ -39,6 +39,7 @@ public class EventGalleryActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        com.example.eventhiveai.SettingsActivity.applySavedTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event_gallery);
 
@@ -190,6 +191,11 @@ public class EventGalleryActivity extends AppCompatActivity {
                 intent.putExtra(
                         "EVENT_NAME",
                         event.getEventName()
+                );
+
+                intent.putExtra(
+                        "CLUB_ID",
+                        event.getClubId()
                 );
 
                 v.getContext().startActivity(intent);

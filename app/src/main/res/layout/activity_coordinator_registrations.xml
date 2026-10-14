@@ -37,6 +37,39 @@
 
     </LinearLayout>
 
+    <!-- EVENT FILTER DROPDOWN CONTAINER -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#171A27"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="10dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🎯 Filter Event:"
+            android:textColor="#CBD5E1"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinnerEventsFilter"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/input_background" />
+
+    </LinearLayout>
+
     <!-- ATTENDANCE SUMMARY BANNER -->
     <LinearLayout
         android:id="@+id/layoutAttendanceStats"
@@ -47,7 +80,7 @@
         android:padding="14dp"
         android:layout_marginStart="12dp"
         android:layout_marginEnd="12dp"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="8dp"
         android:layout_marginBottom="6dp">
 
         <LinearLayout
